@@ -1,0 +1,49 @@
+{
+  "endpoints": {
+    "registration": {
+      "status": "error",
+      "error": "Request failed with status code 404",
+      "statusCode": 404,
+      "data": []
+    },
+    "k510": {
+      "status": "error",
+      "error": "Request failed with status code 404",
+      "statusCode": 404,
+      "data": []
+    },
+    "enforcement": {
+      "status": "error",
+      "error": "Request failed with status code 404",
+      "statusCode": 404,
+      "data": []
+    },
+    "adverse": {
+      "status": "error",
+      "error": "Request failed with status code 404",
+      "statusCode": 404,
+      "data": []
+    },
+    "udi": {
+      "status": "error",
+      "error": "Request failed with status code 404",
+      "statusCode": 404,
+      "data": []
+    },
+    "pma": {
+      "status": "error",
+      "error": "Request failed with status code 404",
+      "statusCode": 404,
+      "data": []
+    }
+  },
+  "combinedResults": [
+    {
+      "source": "placeholder",
+      "name": "Flow Medical",
+      "description": "No FDA data found for Flow Medical across all endpoints",
+      "date": "Unknown",
+      "status": "Unknown"
+    }
+  ]
+}

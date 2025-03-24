@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HCPCS Code Reimbursement Analyzer</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- PapaParse for CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <!-- Alpine.js for interactivity -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.10.3/cdn.min.js" defer></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-blue-800 mb-2">HCPCS Code Reimbursement Analyzer</h1>
+            <p class="text-gray-600">Analyze reimbursement rates for selected HCPCS codes across multiple years</p>
+        </header>
+
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8" x-data="{ activeTab: 'filtered' }">
+            <div class="flex border-b border-gray-200 mb-6">
+                <button 
+                    @click="activeTab = 'filtered'" 
+                    :class="activeTab === 'filtered' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+                    class="py-2 px-4 font-medium">
+                    Filtered HCPCS Codes
+                </button>
+                <button 
+                    @click="activeTab = 'reimbursement'" 
+                    :class="activeTab === 'reimbursement' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+                    class="py-2 px-4 font-medium">
+                    Reimbursement Analysis
+                </button>
+                <button 
+                    @click="activeTab = 'trends'" 
+                    :class="activeTab === 'trends' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+                    class="py-2 px-4 font-medium">
+                    Trends & Comparisons
+                </button>
+                <button 
+                    @click="activeTab = 'calculation'" 
+                    :class="activeTab === 'calculation' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'"
+                    class="py-2 px-4 font-medium">
+                    Calculation Method
+                </button>
+            </div>
+
+            <div x-show="activeTab === 'filtered'" x-data="filteredCodesApp()" x-init="initialize()">
+                <div class="mb-4 flex flex-wrap gap-4">
+                    <div class="flex-grow">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                        <input 
+                            type="text" 
+                            x-model="searchTerm" 
+                            @input="applyFilters()"
+                            placeholder="Search by code or description..." 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div class="w-48">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Filter by Code</label>
+                        <select 
+                            x-model="selectedCode" 
+                            @change="applyFilters()"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">All Codes</option>
+                            <template x-for="code in uniqueCodes" :key="code">
+                                <option :value="code" x-text="code"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div class="w-48">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                        <select 
+                            x-model="selectedLocation" 
+                            @change="applyFilters()"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">All Locations</option>
+                            <template x-for="location in uniqueLocations" :key="location">
+                                <option :value="location" x-text="location"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto bg-white rounded-lg shadow">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <template x-for="header in tableHeaders" :key="header">
+                                    <th 
+                                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                                        @click="sortTable(header)"
+                                        x-html="header + (sortColumn === header ? (sortDirection === 'asc' ? ' ↑' : ' ↓') : '')">
+                                    </th>
+                                </template>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <template x-for="(row, index) in paginatedData" :key="index">
+                                <tr class="hover:bg-gray-50">
+                                    <template x-for="header in tableHeaders" :key="header">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="row[header]"></td>
+                                    </template>
+                                </tr>
+                            </template>
+                            <tr x-show="filteredData.length === 0">
+                                <td :colspan="tableHeaders.length" class="px-6 py-4 text-center text-sm text-gray-500">
+                                    No matching records found
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Controls -->
+                <div class="flex items-center justify-between mt-4" x-show="filteredData.length > 0">
+                    <div class="text-sm text-gray-700">
+                        Showing <span x-text="(currentPage - 1) * pageSize + 1"></span> to 
+                        <span x-text="Math.min(currentPage * pageSize, filteredData.length)"></span> of 
+                        <span x-text="filteredData.length"></span> entries
+                    </div>
+                    <div class="flex space-x-2">
+                        <button 
+                            @click="currentPage = Math.max(1, currentPage - 1)"
+                            :disabled="currentPage === 1"
+                            :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''"
+                            class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            Previous
+                        </button>
+                        <button 
+                            @click="currentPage = Math.min(totalPages, currentPage + 1)"
+                            :disabled="currentPage === totalPages"
+                            :class="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''"
+                            class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            Next
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="activeTab === 'reimbursement'" x-data="reimbursementApp()" x-init="initialize()">
+                <div class="mb-6">
+                    <div class="flex flex-wrap gap-4 mb-4">
+                        <div class="w-48">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                            <select 
+                                x-model="selectedYear" 
+                                @change="updateReimbursementData()"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="2023">2023</option>
+                                <option value="2024A">2024A</option>
+                                <option value="2024B">2024B</option>
+                                <option value="2025">2025</option>
+                            </select>
+                        </div>
+                        <div class="w-48">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Facility Type</label>
+                            <select 
+                                x-model="facilityType" 
+                                @change="updateReimbursementData()"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="nonFacility">Non-Facility</option>
+                                <option value="facility">Facility</option>
+                            </select>
+                        </div>
+                        <div class="w-48">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                            <select 
+                                x-model="selectedLocation" 
+                                @change="updateReimbursementData()"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="0000000">National</option>
+                                <template x-for="location in locations" :key="location">
+                                    <option :value="location" x-text="location"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto bg-white rounded-lg shadow">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HCPCS Code</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Work RVU</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PE RVU</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MP RVU</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total RVU</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Conversion Factor</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reimbursement</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <template x-for="(code, index) in reimbursementData" :key="index">
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <a :href="'https://www.cms.gov/medicare/physician-fee-schedule/search?Y=0&T=0&HT=0&H1=' + code.hcpcsCode + '&M=5'" target="_blank" class="text-blue-600 hover:underline" x-text="code.hcpcsCode"></a>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="code.description"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="code.workRVU"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="code.peRVU"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="code.mpRVU"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="code.totalRVU"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="'$' + code.convFactor"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" x-text="'$' + code.reimbursement"></td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                            <button 
+                                                @click="showCalculationDetails(code)"
+                                                class="text-blue-600 hover:text-blue-800 underline">
+                                                Show Details
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Calculation Details Modal -->
+                <div 
+                    x-show="calculationModal.show" 
+                    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+                    style="display: none;"
+                    @click.self="calculationModal.show = false">
+                    <div class="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-medium text-gray-900">Reimbursement Calculation Details</h3>
+                            <button @click="calculationModal.show = false" class="text-gray-400 hover:text-gray-500">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-800 mb-2" x-text="'HCPCS Code: ' + calculationModal.code"></h4>
+                            <p class="text-gray-600 mb-4" x-text="calculationModal.description"></p>
+                            
+                            <div class="bg-gray-50 p-4 rounded-md mb-4">
+                                <h5 class="font-medium text-gray-700 mb-2">Input Values:</h5>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <span class="text-gray-600">Work RVU:</span>
+                                        <span class="font-medium ml-2" x-text="calculationModal.workRVU"></span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">GPCI Work:</span>
+                                        <span class="font-medium ml-2" x-text="calculationModal.gpciWork"></span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">PE RVU:</span>
+                                        <span class="font-medium ml-2" x-text="calculationModal.peRVU"></span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">GPCI PE:</span>
+                                        <span class="font-medium ml-2" x-text="calculationModal.gpciPE"></span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">MP RVU:</span>
+                                        <span class="font-medium ml-2" x-text="calculationModal.mpRVU"></span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">GPCI MP:</span>
+                                        <span class="font-medium ml-2" x-text="calculationModal.gpciMP"></span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">Conversion Factor:</span>
+                                        <span class="font-medium ml-2" x-text="'$' + calculationModal.convFactor"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-50 p-4 rounded-md mb-4">
+                                <h5 class="font-medium text-gray-700 mb-2">Calculation Steps:</h5>
+                                <ol class="list-decimal list-inside space-y-2 text-sm">
+                                    <li x-html="'Work Component: ' + calculationModal.workRVU + ' × ' + calculationModal.gpciWork + ' = <strong>' + (calculationModal.workRVU * calculationModal.gpciWork).toFixed(4) + '</strong>'"></li>
+                                    <li x-html="'Practice Expense Component: ' + calculationModal.peRVU + ' × ' + calculationModal.gpciPE + ' = <strong>' + (calculationModal.peRVU * calculationModal.gpciPE).toFixed(4) + '</strong>'"></li>
+                                    <li x-html="'Malpractice Component: ' + calculationModal.mpRVU + ' × ' + calculationModal.gpciMP + ' = <strong>' + (calculationModal.mpRVU * calculationModal.gpciMP).toFixed(4) + '</strong>'"></li>
+                                    <li x-html="'Total Adjusted RVUs: ' + (calculationModal.workRVU * calculationModal.gpciWork).toFixed(4) + ' + ' + (calculationModal.peRVU * calculationModal.gpciPE).toFixed(4) + ' + ' + (calculationModal.mpRVU * calculationModal.gpciMP).toFixed(4) + ' = <strong>' + calculationModal.totalRVU + '</strong>'"></li>
+                                    <li x-html="'Final Reimbursement: ' + calculationModal.totalRVU + ' × $' + calculationModal.convFactor + ' = <strong>$' + calculationModal.reimbursement + '</strong>'"></li>
+                                </ol>
+                            </div>
+
+                            <div class="bg-blue-50 p-4 rounded-md text-blue-700 text-sm">
+                                <p class="font-medium mb-2">Notes:</p>
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li>GPCI values adjust payment rates for geographic variations in practice costs.</li>
+                                    <li>The calculation shown represents the Medicare Physician Fee Schedule (PFS) methodology.</li>
+                                    <li>Commercial payers typically use Medicare rates as a benchmark and apply their own fee schedules.</li>
+                                    <li>Actual payment may vary based on modifier usage, multiple procedure rules, and other factors.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="activeTab === 'trends'" x-data="trendsApp()" x-init="initialize()">
+                <div class="mb-6">
+                    <div class="flex flex-wrap gap-4 mb-4">
+                        <div class="w-48">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">HCPCS Code</label>
+                            <select 
+                                x-model="selectedCode" 
+                                @change="updateTrendsData()"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                <template x-for="code in hcpcsCodes" :key="code">
+                                    <option :value="code" x-text="code"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div class="w-48">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Facility Type</label>
+                            <select 
+                                x-model="facilityType" 
+                                @change="updateTrendsData()"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="nonFacility">Non-Facility</option>
+                                <option value="facility">Facility</option>
+                            </select>
+                        </div>
+                        <div class="w-48">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                            <select 
+                                x-model="selectedLocation" 
+                                @change="updateTrendsData()"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="0000000">National</option>
+                                <template x-for="location in locations" :key="location">
+                                    <option :value="location" x-text="location"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Reimbursement Trends</h3>
+                            <div class="h-80">
+                                <canvas id="trendsChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow p-6">
+                            <h3 class="text-lg font-medium text-gray-900 mb-4">Year-over-Year Changes</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year Comparison</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">RVU Change</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate Change</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">% Change</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <template x-for="(change, index) in yearChanges" :key="index">
+                                            <tr class="hover:bg-gray-50">
+                                                <td class="px-4 py-3 whitespace-nowrap text-sm" x-text="change.comparison"></td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-sm" x-text="change.rvuChange.toFixed(2)"></td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-sm" x-text="' + change.rateChange.toFixed(2)"></td>
+                                                <td class="px-4 py-3 whitespace-nowrap text-sm" x-html="formatPercentChange(change.percentChange)"></td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Component Analysis</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <h4 class="font-medium text-gray-700 mb-2">Work RVU Changes</h4>
+                                <div class="h-60">
+                                    <canvas id="workRVUChart"></canvas>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-700 mb-2">PE RVU Changes</h4>
+                                <div class="h-60">
+                                    <canvas id="peRVUChart"></canvas>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-700 mb-2">Conversion Factor Changes</h4>
+                                <div class="h-60">
+                                    <canvas id="convFactorChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="activeTab === 'calculation'" x-data="calculationApp()">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Reimbursement Calculation Methodology</h3>
+                    
+                    <div class="prose max-w-none">
+                        <p>The reimbursement rates for HCPCS codes are calculated using the Medicare Physician Fee Schedule (MPFS) methodology. This calculation is based on three key components:</p>
+                        
+                        <ol class="list-decimal pl-6 mb-6">
+                            <li class="mb-2">
+                                <strong>Relative Value Units (RVUs)</strong> - Each code has three RVU components:
+                                <ul class="list-disc pl-6 mt-1">
+                                    <li><strong>Work RVU</strong>: Represents the physician work involved in providing the service</li>
+                                    <li><strong>Practice Expense (PE) RVU</strong>: Covers overhead costs associated with providing the service</li>
+                                    <li><strong>Malpractice (MP) RVU</strong>: Accounts for professional liability expenses</li>
+                                </ul>
+                            </li>
+                            <li class="mb-2">
+                                <strong>Geographic Practice Cost Indices (GPCIs)</strong> - Adjusts payment rates for geographic variations:
+                                <ul class="list-disc pl-6 mt-1">
+                                    <li>Each RVU component is adjusted by its corresponding GPCI</li>
+                                    <li>GPCI values vary by geographic location (MAC Locality)</li>
+                                </ul>
+                            </li>
+                            <li class="mb-2">
+                                <strong>Conversion Factor (CF)</strong> - A national dollar value that converts the adjusted RVUs to a payment amount:
+                                <ul class="list-disc pl-6 mt-1">
+                                    <li>Updated annually by CMS</li>
+                                    <li>May be adjusted due to budget neutrality requirements</li>
+                                </ul>
+                            </li>
+                        </ol>
+
+                        <h4 class="text-lg font-medium mb-2">Calculation Formula</h4>
+                        <div class="bg-gray-50 p-4 rounded-md mb-6">
+                            <p class="font-mono">Reimbursement = [(Work RVU × Work GPCI) + (PE RVU × PE GPCI) + (MP RVU × MP GPCI)] × Conversion Factor</p>
+                        </div>
+                        
+                        <h4 class="text-lg font-medium mb-2">Important Considerations</h4>
+                        <ul class="list-disc pl-6 mb-6">
+                            <li>Different RVU values are used for facility versus non-facility settings</li>
+                            <li>Medicare payment is generally 80% of the calculated amount, with the beneficiary responsible for the remaining 20% (not reflected in displayed rates)</li>
+                            <li>Commercial payers typically use the Medicare rates as a reference and apply their own conversion factors or multipliers</li>
+                            <li>Modifiers may impact the final reimbursement amount</li>
+                            <li>Multiple procedure payment reduction (MPPR) rules may apply when multiple procedures are performed during the same session</li>
+                        </ul>
+                        
+                        <h4 class="text-lg font-medium mb-2">Official References</h4>
+                        <ul class="list-disc pl-6">
+                            <li><a href="https://www.cms.gov/medicare/physician-fee-schedule/search" class="text-blue-600 hover:underline" target="_blank">CMS Physician Fee Schedule Search</a></li>
+                            <li><a href="https://www.cms.gov/medicare/coding/hcpcsreleasecodesets" class="text-blue-600 hover:underline" target="_blank">CMS HCPCS Release & Code Sets</a></li>
+                            <li><a href="https://www.cms.gov/medicare/medicare-fee-for-service-payment/physicianfeesched" class="text-blue-600 hover:underline" target="_blank">CMS Medicare Physician Fee Schedule</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Addendum B Data Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8" x-data="addendumBApp()" x-init="initialize()">
+            <h2 class="text-xl font-bold text-blue-800 mb-4">Addendum B Data</h2>
+            
+            <div class="mb-4 flex flex-wrap gap-4">
+                <div class="flex-grow">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                    <input 
+                        type="text" 
+                        x-model="searchTerm" 
+                        @input="filterAddendumData()"
+                        placeholder="Search by code or description..." 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="w-48">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Filter by Code</label>
+                    <select 
+                        x-model="selectedCode" 
+                        @change="filterAddendumData()"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Codes</option>
+                        <template x-for="code in hcpcsCodes" :key="code">
+                            <option :value="code" x-text="code"></option>
+                        </template>
+                    </select>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto bg-white rounded-lg shadow">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">HCPCS Code</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Short Description</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status Indicator</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Copayment</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">APC</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <template x-for="(row, index) in paginatedAddendumData" :key="index">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium" x-text="row.hcpcsCode"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="row.shortDescription"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="row.statusIndicator"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="row.payment"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="row.copayment"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="row.apc"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <a :href="'https://www.cms.gov/medicare/physician-fee-schedule/search?Y=0&T=0&HT=0&H1=' + row.hcpcsCode + '&M=5'" target="_blank" class="text-blue-600 hover:underline">View on CMS</a>
+                                </td>
+                            </tr>
+                        </template>
+                        <tr x-show="filteredAddendumData.length === 0">
+                            <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
+                                No matching records found
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination Controls for Addendum B -->
+            <div class="flex items-center justify-between mt-4" x-show="filteredAddendumData.length > 0">
+                <div class="text-sm text-gray-700">
+                    Showing <span x-text="(currentAddendumPage - 1) * pageSize + 1"></span> to 
+                    <span x-text="Math.min(currentAddendumPage * pageSize, filteredAddendumData.length)"></span> of 
+                    <span x-text="filteredAddendumData.length"></span> entries
+                </div>
+                <div class="flex space-x-2">
+                    <button 
+                        @click="currentAddendumPage = Math.max(1, currentAddendumPage - 1)"
+                        :disabled="currentAddendumPage === 1"
+                        :class="currentAddendumPage === 1 ? 'opacity-50 cursor-not-allowed' : ''"
+                        class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Previous
+                    </button>
+                    <button 
+                        @click="currentAddendumPage = Math.min(totalAddendumPages, currentAddendumPage + 1)"
+                        :disabled="currentAddendumPage === totalAddendumPages"
+                        :class="currentAddendumPage === totalAddendumPages ? 'opacity-50 cursor-not-allowed' : ''"
+                        class="px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Next
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    
+    <script>
+        // List of HCPCS codes to filter
+        const hcpcsCodes = ['61885', '61888', '61889', '61891', '61892', '64568', '64569', '64570', '95970', '95976', '95977', '95983'];
+
+        // Mock data for demonstration (replace with actual data loading from your files)
+        function getMockData() {
+            return {
+                // Mock data for the original filtered codes table
+                filteredCodesData: [
+                    { "HCPCS Code": "95970", "Short Description": "Alys npgt w/o prgrmg", "Mac Locality": "0000000", "Non-Facility Price": "$18.11", "Facility Price": "$17.79" },
+                    { "HCPCS Code": "95970", "Short Description": "Alys npgt w/o prgrmg", "Mac Locality": "0111205", "Non-Facility Price": "$21.01", "Facility Price": "$20.55" }
+                ],
+                
+                // Mock data for reimbursement calculations
+                reimbursementData: {
+                    "2023": [
+                        { hcpcsCode: "95970", description: "Alys npgt w/o prgrmg", workRVU: 0.35, peRVU: 0.18, mpRVU: 0.03, totalRVU: 0.56, convFactor: 33.8872, reimbursement: 18.98, nonFacility: true, macLocality: "0000000" },
+                        { hcpcsCode: "95976", description: "Alys smpl cn npgt prgrmg", workRVU: 0.73, peRVU: 0.31, mpRVU: 0.05, totalRVU: 1.09, convFactor: 33.8872, reimbursement: 36.94, nonFacility: true, macLocality: "0000000" },
+                        { hcpcsCode: "95977", description: "Alys cplx cn npgt prgrmg", workRVU: 0.97, peRVU: 0.40, mpRVU: 0.07, totalRVU: 1.44, convFactor: 33.8872, reimbursement: 48.80, nonFacility: true, macLocality: "0000000" }
+                    ],
+                    "2024A": [
+                        { hcpcsCode: "95970", description: "Alys npgt w/o prgrmg", workRVU: 0.35, peRVU: 0.18, mpRVU: 0.03, totalRVU: 0.56, convFactor: 33.5948, reimbursement: 18.81, nonFacility: true, macLocality: "0000000" },
+                        { hcpcsCode: "95976", description: "Alys smpl cn npgt prgrmg", workRVU: 0.73, peRVU: 0.31, mpRVU: 0.05, totalRVU: 1.09, convFactor: 33.5948, reimbursement: 36.62, nonFacility: true, macLocality: "0000000" },
+                        { hcpcsCode: "95977", description: "Alys cplx cn npgt prgrmg", workRVU: 0.97, peRVU: 0.40, mpRVU: 0.07, totalRVU: 1.44, convFactor: 33.5948, reimbursement: 48.38, nonFacility: true, macLocality: "0000000" }
+                    ],
+                    "2024B": [
+                        { hcpcsCode: "95970", description: "Alys npgt w/o prgrmg", workRVU: 0.35, peRVU: 0.18, mpRVU: 0.03, totalRVU: 0.56, convFactor: 32.7420, reimbursement: 18.34, nonFacility: true, macLocality: "0000000" },
+                        { hcpcsCode: "95976", description: "Alys smpl cn npgt prgrmg", workRVU: 0.73, peRVU: 0.31, mpRVU: 0.05, totalRVU: 1.09, convFactor: 32.7420, reimbursement: 35.69, nonFacility: true, macLocality: "0000000" },
+                        { hcpcsCode: "95977", description: "Alys cplx cn npgt prgrmg", workRVU: 0.97, peRVU: 0.40, mpRVU: 0.07, totalRVU: 1.44, convFactor: 32.7420, reimbursement: 47.15, nonFacility: true, macLocality: "0000000" }
+                    ],
+                    "2025": [
+                        { hcpcsCode: "95970", description: "Alys npgt w/o prgrmg", workRVU: 0.35, peRVU: 0.18, mpRVU: 0.03, totalRVU: 0.56, convFactor: 32.3465, reimbursement: 18.11, nonFacility: true, macLocality: "0000000" },
+                        { hcpcsCode: "95976", description: "Alys smpl cn npgt prgrmg", workRVU: 0.73, peRVU: 0.31, mpRVU: 0.05, totalRVU: 1.09, convFactor: 32.3465, reimbursement: 35.26, nonFacility: true, macLocality: "0000000" },
+                        { hcpcsCode: "95977", description: "Alys cplx cn npgt prgrmg", workRVU: 0.97, peRVU: 0.40, mpRVU: 0.07, totalRVU: 1.44, convFactor: 32.3465, reimbursement: 46.58, nonFacility: true, macLocality: "0000000" }
+                    ]
+                },
+                
+                // Mock data for Addendum B
+                addendumBData: [
+                    { hcpcsCode: "95970", shortDescription: "Alys npgt w/o prgrmg", statusIndicator: "S", payment: "$65.77", copayment: "$13.16", apc: "5734" },
+                    { hcpcsCode: "95976", shortDescription: "Alys smpl cn npgt prgrmg", statusIndicator: "S", payment: "$113.46", copayment: "$22.70", apc: "5742" },
+                    { hcpcsCode: "95977", shortDescription: "Alys cplx cn npgt prgrmg", statusIndicator: "S", payment: "$113.46", copayment: "$22.70", apc: "5742" }
+                ]
+            };
+        }
+
+        // Filtered Codes Table component
+        function filteredCodesApp() {
+            return {
+                allData: [],
+                filteredData: [],
+                paginatedData: [],
+                tableHeaders: [],
+                uniqueCodes: [],
+                uniqueLocations: [],
+                searchTerm: '',
+                selectedCode: '',
+                selectedLocation: '',
+                currentPage: 1,
+                pageSize: 10,
+                sortColumn: '',
+                sortDirection: 'asc',
+                
+                get totalPages() {
+                    return Math.ceil(this.filteredData.length / this.pageSize);
+                },
+                
+                initialize() {
+                    // Simulate loading the data
+                    this.allData = getMockData().filteredCodesData;
+                    
+                    // Use first row to get headers
+                    if (this.allData.length > 0) {
+                        this.tableHeaders = Object.keys(this.allData[0]);
+                    }
+                    
+                    // Get unique codes and locations for filters
+                    this.uniqueCodes = [...new Set(this.allData.map(row => row['HCPCS Code']))];
+                    this.uniqueLocations = [...new Set(this.allData.map(row => row['Mac Locality']))];
+                    
+                    this.applyFilters();
+                },
+                
+                applyFilters() {
+    this.filteredData = this.allData.filter(row => {
+        const matchesSearch = this.searchTerm === '' || 
+            Object.values(row).some(value => 
+                value.toString().toLowerCase().includes(this.searchTerm.toLowerCase())
+            );
+        
+        const matchesCode = this.selectedCode === '' || 
+            row['HCPCS Code'] === this.selectedCode;
+        
+        const matchesLocation = this.selectedLocation === '' || 
+            row['Mac Locality'] === this.selectedLocation;
+        
+        return matchesSearch && matchesCode && matchesLocation;
+    });
+    
+    if (this.sortColumn) {
+        this.sortTable(this.sortColumn);
+    } else {
+        this.updatePaginatedData();
+    }
+},
+
+sortTable(column) {
+    if (this.sortColumn === column) {
+        this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        this.sortColumn = column;
+        this.sortDirection = 'asc';
+    }
+    
+    this.filteredData.sort((a, b) => {
+        let valA = a[column];
+        let valB = b[column];
+        
+        // Handle currency values
+        if (typeof valA === 'string' && valA.startsWith('$')) {
+            valA = parseFloat(valA.replace('$', ''));
+            valB = parseFloat(valB.replace('$', ''));
+        }
+        
+        if (valA < valB) return this.sortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return this.sortDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+    
+    this.updatePaginatedData();
+},
+
+updatePaginatedData() {
+    const start = (this.currentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    this.paginatedData = this.filteredData.slice(start, end);
+}
+            }
+        }
+        // Reimbursement Analysis component
+        function reimbursementApp() {
+            return {
+                reimbursementData: [],
+                allData: {},
+                selectedYear: '2025',
+                facilityType: 'nonFacility',
+                selectedLocation: '0000000',
+                locations: ['0111205', '0111209', '0111251', '0111252', '0111253', '0111254'],
+                calculationModal: {
+                    show: false,
+                    code: '',
+                    description: '',
+                    workRVU: 0,
+                    peRVU: 0,
+                    mpRVU: 0,
+                    gpciWork: 0,
+                    gpciPE: 0,
+                    gpciMP: 0,
+                    totalRVU: 0,
+                    convFactor: 0,
+                    reimbursement: 0
+                },
+                
+                initialize() {
+                    this.allData = getMockData().reimbursementData;
+                    this.updateReimbursementData();
+                },
+                
+                updateReimbursementData() {
+                    const yearData = this.allData[this.selectedYear] || [];
+                    
+                    this.reimbursementData = yearData.filter(item => {
+                        const matchesFacilityType = this.facilityType === 'nonFacility' ? 
+                            item.nonFacility : !item.nonFacility;
+                        
+                        const matchesLocation = this.selectedLocation === '0000000' || 
+                            item.macLocality === this.selectedLocation;
+                        
+                        return matchesFacilityType && matchesLocation;
+                    });
+                },
+                
+                showCalculationDetails(code) {
+                    this.calculationModal = {
+                        show: true,
+                        code: code.hcpcsCode,
+                        description: code.description,
+                        workRVU: code.workRVU,
+                        peRVU: code.peRVU,
+                        mpRVU: code.mpRVU,
+                        gpciWork: 1.000, // Default values, replace with actual
+                        gpciPE: 1.000,
+                        gpciMP: 1.000,
+                        totalRVU: code.totalRVU,
+                        convFactor: code.convFactor,
+                        reimbursement: code.reimbursement.toFixed(2)
+                    };
+                }
+            };
+        }
+        
+        // Trends Analysis component
+        function trendsApp() {
+            return {
+                trendsData: {},
+                yearChanges: [],
+                selectedCode: '95970',
+                facilityType: 'nonFacility',
+                selectedLocation: '0000000',
+                locations: ['0111205', '0111209', '0111251', '0111252', '0111253', '0111254'],
+                hcpcsCodes: hcpcsCodes,
+                
+                initialize() {
+                    this.trendsData = getMockData().reimbursementData;
+                    this.updateTrendsData();
+                },
+                
+                updateTrendsData() {
+                    // Calculate year-over-year changes
+                    this.yearChanges = [];
+                    
+                    const years = ['2023', '2024A', '2024B', '2025'];
+                    const comparisons = [
+                        { from: '2023', to: '2024A', label: '2023 to 2024A' },
+                        { from: '2024A', to: '2024B', label: '2024A to 2024B' },
+                        { from: '2024B', to: '2025', label: '2024B to 2025' },
+                        { from: '2023', to: '2025', label: '2023 to 2025 (Total)' }
+                    ];
+                    
+                    for (const comp of comparisons) {
+                        const fromData = this.getCodeDataForYear(comp.from);
+                        const toData = this.getCodeDataForYear(comp.to);
+                        
+                        if (fromData && toData) {
+                            const rvuChange = toData.totalRVU - fromData.totalRVU;
+                            const rateChange = toData.reimbursement - fromData.reimbursement;
+                            const percentChange = (rateChange / fromData.reimbursement) * 100;
+                            
+                            this.yearChanges.push({
+                                comparison: comp.label,
+                                rvuChange,
+                                rateChange,
+                                percentChange
+                            });
+                        }
+                    }
+                    
+                    // Initialize charts
+                    this.initCharts();
+                },
+                
+                getCodeDataForYear(year) {
+                    const yearData = this.trendsData[year] || [];
+                    return yearData.find(item => {
+                        return item.hcpcsCode === this.selectedCode && 
+                               (this.facilityType === 'nonFacility' ? item.nonFacility : !item.nonFacility) &&
+                               (this.selectedLocation === '0000000' || item.macLocality === this.selectedLocation);
+                    });
+                },
+                
+                initCharts() {
+            setTimeout(() => {
+                this.createTrendsChart();
+                this.createComponentCharts();
+            });
+        },
+
+        // Continue from previous code
+        createTrendsChart() {
+                    const years = ['2023', '2024A', '2024B', '2025'];
+                    const reimbursementData = [];
+                    const rvuData = [];
+                    
+                    for (const year of years) {
+                        const codeData = this.getCodeDataForYear(year);
+                        if (codeData) {
+                            reimbursementData.push(codeData.reimbursement);
+                            rvuData.push(codeData.totalRVU);
+                        } else {
+                            reimbursementData.push(null);
+                            rvuData.push(null);
+                        }
+                    }
+                    
+                    // Create the trends chart using Chart.js
+                    const ctx = document.getElementById('trendsChart');
+                    if (window.trendsChartInstance) {
+                        window.trendsChartInstance.destroy();
+                    }
+                    
+                    window.trendsChartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: years,
+                            datasets: [
+                                {
+                                    label: 'Reimbursement Rate ($)',
+                                    data: reimbursementData,
+                                    borderColor: 'rgb(59, 130, 246)',
+                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                    yAxisID: 'y',
+                                    tension: 0.1,
+                                    fill: true
+                                },
+                                {
+                                    label: 'Total RVU',
+                                    data: rvuData,
+                                    borderColor: 'rgb(16, 185, 129)',
+                                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                    yAxisID: 'y1',
+                                    tension: 0.1,
+                                    fill: true
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'left',
+                                    title: {
+                                        display: true,
+                                        text: 'Reimbursement ($)'
+                                    }
+                                },
+                                y1: {
+                                    type: 'linear',
+                                    display: true,
+                                    position: 'right',
+                                    grid: {
+                                        drawOnChartArea: false
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: 'Total RVU'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: `${this.selectedCode} Reimbursement & RVU Trends`,
+                                    font: {
+                                        size: 16
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed.y !== null) {
+                                                if (label.includes('Reimbursement')) {
+                                                    label += '$' + context.parsed.y.toFixed(2);
+                                                } else {
+                                                    label += context.parsed.y.toFixed(2);
+                                                }
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Create the component charts (Work RVU, PE RVU, Conv Factor)
+                    this.createComponentCharts();
+                },
+                
+                createComponentCharts() {
+                    const years = ['2023', '2024A', '2024B', '2025'];
+                    
+                    // Work RVU chart
+                    const workRVUData = years.map(year => {
+                        const codeData = this.getCodeDataForYear(year);
+                        return codeData ? codeData.workRVU : null;
+                    });
+                    
+                    // PE RVU chart
+                    const peRVUData = years.map(year => {
+                        const codeData = this.getCodeDataForYear(year);
+                        return codeData ? codeData.peRVU : null;
+                    });
+                    
+                    // Conversion Factor chart
+                    const convFactorData = years.map(year => {
+                        const codeData = this.getCodeDataForYear(year);
+                        return codeData ? codeData.convFactor : null;
+                    });
+                    
+                    // Create the Work RVU chart
+                    const ctxWork = document.getElementById('workRVUChart');
+                    if (window.workRVUChartInstance) {
+                        window.workRVUChartInstance.destroy();
+                    }
+                    
+                    window.workRVUChartInstance = new Chart(ctxWork, {
+                        type: 'bar',
+                        data: {
+                            labels: years,
+                            datasets: [{
+                                label: 'Work RVU',
+                                data: workRVUData,
+                                backgroundColor: 'rgba(59, 130, 246, 0.8)'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Work RVU by Year'
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Create the PE RVU chart
+                    const ctxPE = document.getElementById('peRVUChart');
+                    if (window.peRVUChartInstance) {
+                        window.peRVUChartInstance.destroy();
+                    }
+                    
+                    window.peRVUChartInstance = new Chart(ctxPE, {
+                        type: 'bar',
+                        data: {
+                            labels: years,
+                            datasets: [{
+                                label: 'PE RVU',
+                                data: peRVUData,
+                                backgroundColor: 'rgba(16, 185, 129, 0.8)'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'PE RVU by Year'
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Create the Conversion Factor chart
+                    const ctxCF = document.getElementById('convFactorChart');
+                    if (window.convFactorChartInstance) {
+                        window.convFactorChartInstance.destroy();
+                    }
+                    
+                    window.convFactorChartInstance = new Chart(ctxCF, {
+                        type: 'line',
+                        data: {
+                            labels: years,
+                            datasets: [{
+                                label: 'Conversion Factor',
+                                data: convFactorData,
+                                borderColor: 'rgb(249, 115, 22)',
+                                backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                                tension: 0.1,
+                                fill: true
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'Conversion Factor by Year'
+                                }
+                            }
+                        }
+                    });
+                }
+            };
+        }
+        
+        // Helper function to format percent change
+        function formatPercentChange(value) {
+            const formatted = value.toFixed(2) + '%';
+            if (value < 0) {
+                return `<span class="text-red-600">${formatted}</span>`;
+            } else if (value > 0) {
+                return `<span class="text-green-600">+${formatted}</span>`;
+            } else {
+                return `<span>${formatted}</span>`;
+            }
+        }
+        
+        // Calculation Method component
+        function calculationApp() {
+            return {
+                // This component is static and doesn't require data initialization
+            };
+        }
+        
+        // Addendum B component
+        function addendumBApp() {
+            return {
+                allAddendumData: [],
+                filteredAddendumData: [],
+                paginatedAddendumData: [],
+                searchTerm: '',
+                selectedCode: '',
+                currentAddendumPage: 1,
+                pageSize: 10,
+                hcpcsCodes: hcpcsCodes,
+                
+                get totalAddendumPages() {
+                    return Math.ceil(this.filteredAddendumData.length / this.pageSize);
+                },
+                
+                initialize() {
+                    // Load Addendum B data
+                    this.allAddendumData = getMockData().addendumBData;
+                    this.filterAddendumData();
+                    
+                    // Initialize real data loading from ADD_B.csv
+                    this.loadAddendumBData();
+                },
+                
+                filterAddendumData() {
+                    this.filteredAddendumData = this.allAddendumData.filter(row => {
+                        const matchesSearch = this.searchTerm === '' || 
+                            Object.values(row).some(value => 
+                                value.toString().toLowerCase().includes(this.searchTerm.toLowerCase())
+                            );
+                        
+                        const matchesCode = this.selectedCode === '' || 
+                            row.hcpcsCode === this.selectedCode;
+                        
+                        return matchesSearch && matchesCode;
+                    });
+                    
+                    this.updatePaginatedAddendumData();
+                },
+                
+                updatePaginatedAddendumData() {
+                    const start = (this.currentAddendumPage - 1) * this.pageSize;
+                    const end = start + this.pageSize;
+                    this.paginatedAddendumData = this.filteredAddendumData.slice(start, end);
+                },
+                
+                loadAddendumBData() {
+                    // Attempt to fetch and parse the ADD_B.csv file
+                    fetch('data/ADD_B.csv')
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Failed to fetch the ADD_B.csv file. Using mock data instead.');
+                            }
+                            return response.text();
+                        })
+                        .then(csvText => {
+                            // Parse the CSV using PapaParse
+                            Papa.parse(csvText, {
+                                header: true,
+                                skipEmptyLines: true,
+                                complete: (results) => {
+                                    const data = results.data;
+                                    
+                                    // Filter for our HCPCS codes and transform to expected format
+                                    const filteredData = data
+                                        .filter(row => hcpcsCodes.includes(row['HCPCS Code']?.trim()))
+                                        .map(row => ({
+                                            hcpcsCode: row['HCPCS Code']?.trim() || '',
+                                            shortDescription: row['Short Descriptor'] || row['Short Description'] || '',
+                                            statusIndicator: row['Status Indicator'] || '',
+                                            payment: row['Payment Rate'] || row['Payment'] || '$0.00',
+                                            copayment: row['Copayment'] || '$0.00',
+                                            apc: row['APC'] || 'N/A'
+                                        }));
+                                    
+                                    if (filteredData.length > 0) {
+                                        this.allAddendumData = filteredData;
+                                        this.filterAddendumData();
+                                    }
+                                }
+                            });
+                        })
+                        .catch(error => {
+                            console.warn('Using mock data:', error.message);
+                            // Using mock data already loaded
+                        });
+                }
+            };
+        }
+
+        // Function to load and parse the original filtered HCPCS codes from your data file
+        function loadAndParseCSV() {
+            fetch('data/ADD_B.csv')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch the CSV file. Please check the file path.');
+                    }
+                    return response.text();
+                })
+                .then(csvText => {
+                    // Parse the CSV using PapaParse
+                    Papa.parse(csvText, {
+                        header: true, // Treat the first row as headers
+                        skipEmptyLines: true,
+                        complete: function(results) {
+                            const data = results.data;
+                            // Filter the data for the specified HCPCS codes
+                            const filteredData = data.filter(row => hcpcsCodes.includes(row['HCPCS Code']?.trim()));
+                            
+                            // Update the data in the Alpine.js components
+                            const filteredCodesElement = document.querySelector('[x-data="filteredCodesApp()"]');
+                            if (filteredCodesElement && filteredCodesElement.__x) {
+                                const component = filteredCodesElement.__x.getUnobservedData();
+                                component.allData = filteredData;
+                                component.initialize();
+                            }
+                        },
+                        error: function(error) {
+                            console.error('Error parsing CSV:', error.message);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading CSV:', error.message);
+                });
+        }
+
+        // Load the real data when the page loads
+        window.onload = function() {
+            // Initialize with mock data first, then try to load real data
+            loadAndParseCSV();
+        };
+    </script>
+
+</body>
+</html>

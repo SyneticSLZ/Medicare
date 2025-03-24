@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HCPCS Payment and Reimbursement Analysis</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    :root {
+      --chart-red: rgba(239, 68, 68, 0.7);
+      --chart-green: rgba(16, 185, 129, 0.7);
+      --chart-blue: rgba(59, 130, 246, 0.7);
+    }
+    
+    /* Toggle Switch Styles */
+    .toggle-checkbox:checked {
+      right: 0;
+      border-color: #4338ca;
+      background-color: #4338ca;
+    }
+    .toggle-checkbox:checked + .toggle-label {
+      background-color: #6366f1;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+  <div class="min-h-screen p-4 md:p-8">
+    <!-- Header with Dark Mode Toggle -->
+    <div class="flex justify-between items-center mb-8">
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-800 dark:text-white">HCPCS Payment and Reimbursement Analysis</h1>
+      
+      <div class="flex items-center">
+        <span class="mr-2 text-sm text-gray-700 dark:text-gray-300">Light</span>
+        <div class="relative inline-block w-12 mr-2 align-middle select-none">
+          <input type="checkbox" id="darkModeToggle" name="darkModeToggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+          <label for="darkModeToggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+        </div>
+        <span class="text-sm text-gray-700 dark:text-gray-300">Dark</span>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="mb-6">
+      <div class="flex flex-wrap border-b border-gray-300 dark:border-gray-700">
+        <button id="overviewTab" class="tab-btn py-2 px-4 text-lg rounded-t-lg bg-blue-500 dark:bg-blue-600 text-white font-medium">Overview</button>
+        <button id="byDirectoryTab" class="tab-btn py-2 px-4 text-lg rounded-t-lg bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium">By Directory</button>
+        <button id="byCodeTab" class="tab-btn py-2 px-4 text-lg rounded-t-lg bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium">By Code</button>
+      </div>
+    </div>
+
+    <!-- Overview Tab Content -->
+    <div id="overviewContent" class="tab-content block">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4">HCPCS Analysis Overview</h2>
+        <p class="text-gray-600 dark:text-gray-300 mb-6 text-lg">Medicare reimbursement rates and service utilization for neurostimulator device procedures and management.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <!-- Key Metric 1 -->
+          <div class="bg-blue-50 dark:bg-blue-900/30 rounded-lg p-4 text-center">
+            <h3 class="text-lg font-medium text-blue-800 dark:text-blue-300 mb-2">Total Codes</h3>
+            <p class="text-3xl font-bold text-blue-600 dark:text-blue-400">12</p>
+          </div>
+          
+          <!-- Key Metric 2 -->
+          <div class="bg-green-50 dark:bg-green-900/30 rounded-lg p-4 text-center">
+            <h3 class="text-lg font-medium text-green-800 dark:text-green-300 mb-2">Total Spending (2022)</h3>
+            <p class="text-3xl font-bold text-green-600 dark:text-green-400">$2.4M+</p>
+          </div>
+          
+          <!-- Key Metric 3 -->
+          <div class="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-4 text-center">
+            <h3 class="text-lg font-medium text-purple-800 dark:text-purple-300 mb-2">Total Beneficiaries</h3>
+            <p class="text-3xl font-bold text-purple-600 dark:text-purple-400">27,441</p>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300">About This Report</h3>
+          <div class="flex flex-col md:flex-row gap-6">
+            <div class="flex-1 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+              <h4 class="font-medium text-gray-800 dark:text-white mb-2">Rate Types Explained</h4>
+              <ul class="space-y-2 text-gray-600 dark:text-gray-300 text-base">
+                <li class="flex items-start">
+                  <span class="inline-block w-3 h-3 bg-blue-500 rounded-full mt-1.5 mr-2"></span>
+                  <span><strong>Reimbursement Rate:</strong> Calculated using RVU formula</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="inline-block w-3 h-3 bg-green-500 rounded-full mt-1.5 mr-2"></span>
+                  <span><strong>Payment Rate:</strong> Direct value from AB files</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="inline-block w-3 h-3 bg-purple-500 rounded-full mt-1.5 mr-2"></span>
+                  <span><strong>Combined Rate:</strong> Sum of reimbursement and payment</span>
+                </li>
+              </ul>
+            </div>
+            <div class="flex-1 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+              <h4 class="font-medium text-gray-800 dark:text-white mb-2">How To Use This Report</h4>
+              <ol class="space-y-2 text-gray-600 dark:text-gray-300 text-base list-decimal pl-5">
+                <li>View changes over time by clicking the <strong>By Code</strong> tab</li>
+                <li>Compare different codes in the same directory with the <strong>By Directory</strong> tab</li>
+                <li>Use the charts to quickly spot trends and changes</li>
+                <li>Toggle between dark and light mode using the switch above</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Overview Charts -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-4">Payment Trends (2020-2025)</h3>
+        <div class="flex flex-col md:flex-row items-center gap-4 mb-6">
+          <div class="inline-flex items-center p-2 rounded-full bg-blue-100 dark:bg-blue-900/30">
+            <div class="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+            <span class="text-sm text-blue-800 dark:text-blue-300">High Reimbursement Codes</span>
+          </div>
+          <div class="inline-flex items-center p-2 rounded-full bg-green-100 dark:bg-green-900/30">
+            <div class="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+            <span class="text-sm text-green-800 dark:text-green-300">Most Common Procedures</span>
+          </div>
+        </div>
+        <div class="w-full h-80">
+          <canvas id="overviewChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- By Directory Tab Content -->
+    <div id="byDirectoryContent" class="tab-content hidden">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+        <h2 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4">Analysis by Directory</h2>
+        
+        <!-- Directory Filter -->
+        <div class="mb-6">
+          <label for="directorySelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select Directory:</label>
+          <select id="directorySelect" class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg p-2.5 w-full max-w-xs">
+            <option value="618">Directory 618</option>
+            <option value="645">Directory 645</option>
+            <option value="959">Directory 959</option>
+          </select>
+        </div>
+
+        <!-- Directory Data Section -->
+        <div id="directory618" class="directory-data">
+          <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">HCPCS Codes in Group 618</h3>
+          
+          <!-- Chart for Directory -->
+          <div class="mb-8">
+            <h4 class="text-md font-medium text-gray-600 dark:text-gray-400 mb-2">Year-over-Year Rate Changes</h4>
+            <div class="w-full h-64">
+              <canvas id="directory618Chart"></canvas>
+            </div>
+          </div>
+          
+          <!-- Table for Directory -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="bg-gray-100 dark:bg-gray-700 text-xs uppercase text-gray-700 dark:text-gray-300">
+                <tr>
+                  <th scope="col" class="px-4 py-3 rounded-tl-lg">HCPCS Code</th>
+                  <th scope="col" class="px-4 py-3">Rate Type</th>
+                  <th scope="col" class="px-4 py-3">2020</th>
+                  <th scope="col" class="px-4 py-3">2021</th>
+                  <th scope="col" class="px-4 py-3">2022</th>
+                  <th scope="col" class="px-4 py-3">2023</th>
+                  <th scope="col" class="px-4 py-3">2024A</th>
+                  <th scope="col" class="px-4 py-3">2024B</th>
+                  <th scope="col" class="px-4 py-3 rounded-tr-lg">2025</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                  <td rowspan="3" class="px-4 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">61885</td>
+                  <td class="px-4 py-3 italic text-gray-600 dark:text-gray-400">Reimbursement</td>
+                  <td class="px-4 py-3 text-gray-800 dark:text-gray-200">38.82</td>
+                  <td class="px-4 py-3 text-gray-800 dark:text-gray-200">40.49</td>
+                  <td class="px-4 py-3 text-gray-800 dark:text-gray-200">42.63</td>
+                  <td class="px-4 py-3 text-gray-800 dark:text-gray-200">41.86</td>
+                  <td class="px-4 py-3 text-gray-800 dark:text-gray-200">30.46</td>
+                  <td class="px-4 py-3 text-gray-800 dark:text-gray-200">39.26</td>
+                  <td class="px-4 py-3 text-gray-800 dark:text-gray-200">27.57</td>
+                </tr>
+                <tr class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                  <td class="px-4 py-3 italic text-gray-600 dark:text-gray-400">Payment</td>
+                  <td class="px-4 py-3 text-gray-800 dark:text-gray-200">19279.42</td>
+                  <td class="px-4 py-3 text-gray-800 dark:text-gray-200">20479.78</td>
+                  <td class="px-4 py-3 text-gray-800 dark:text-gray-200">20912.55</td>
+                  <td class="px-4 py-3 text-gray-800 dark:text-gray-200">21515.36</td>
+                  <td class="px-4 py-3 text-gray-800 dark:text-gray-200">20842.84</td>
+                  <td class="px-4 py-3 text-gray-800 dark:text-gray-200">20842.84</td>
+                  <td class="px-4 py-3 text-gray-800 dark:text-gray-200">21444.39</td>
+                </tr>
+                <tr class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                  <td class="px-4 py-3 italic text-gray-600 dark:text-gray-400">Combined</td>
+                  <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">19818.24</td>
+                  <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">21020.27</td>
+                  <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">21455.18</td>
+                  <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">22057.22</td>
+                  <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">21373.30</td>
+                  <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">21382.10</td>
+                  <td class="px-4 py-3 font-medium text-gray-800 dark:text-gray-200">21971.96</td>
+                </tr>
+                <!-- More rows would go here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- By Code Tab Content -->
+    <div id="byCodeContent" class="tab-content hidden">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h2 class="text-xl md:text-2xl font-bold text-gray-800 dark:text-white mb-4">Analysis by Code</h2>
+        
+        <!-- Code Selector -->
+        <div class="mb-6">
+          <label for="codeSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Select HCPCS Code:</label>
+          <select id="codeSelect" class="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg p-2.5 w-full max-w-xs">
+            <option value="61885">61885</option>
+            <option value="61888">61888</option>
+            <option value="61889">61889</option>
+            <option value="61891">61891</option>
+            <option value="61892">61892</option>
+            <option value="64568">64568</option>
+            <option value="64569">64569</option>
+            <option value="64570">64570</option>
+            <option value="95970">95970</option>
+            <option value="95976">95976</option>
+            <option value="95977">95977</option>
+            <option value="95983">95983</option>
+          </select>
+        </div>
+
+        <!-- Individual Code View -->
+        <div id="code61885" class="code-data">
+          <div class="mb-6">
+            <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm">
+              <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">HCPCS Code: 61885</h3>
+              <p class="text-base text-gray-600 dark:text-gray-300 mb-4">Insertion of brain neurostimulator pulse device with connection to single electrode array</p>
+              
+              <!-- Metrics Summary Cards -->
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                  <h4 class="text-sm font-medium text-blue-800 dark:text-blue-300">Total Services</h4>
+                  <p class="text-xl font-bold text-blue-600 dark:text-blue-400">1,786</p>
+                </div>
+                <div class="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
+                  <h4 class="text-sm font-medium text-green-800 dark:text-green-300">Beneficiaries</h4>
+                  <p class="text-xl font-bold text-green-600 dark:text-green-400">1,728</p>
+                </div>
+                <div class="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg">
+                  <h4 class="text-sm font-medium text-purple-800 dark:text-purple-300">Avg Medicare Payment</h4>
+                  <p class="text-xl font-bold text-purple-600 dark:text-purple-400">$573.09</p>
+                </div>
+                <div class="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
+                  <h4 class="text-sm font-medium text-amber-800 dark:text-amber-300">Total Spending</h4>
+                  <p class="text-xl font-bold text-amber-600 dark:text-amber-400">$1.07M</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm">
+              <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">Year-over-Year Rate Changes</h3>
+              <div class="h-60">
+                <canvas id="code61885Chart"></canvas>
+              </div>
+            </div>
+            
+            <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm">
+              <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">Market Share (2022)</h3>
+              <div class="h-60">
+                <canvas id="code61885PieChart"></canvas>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Care Setting Split -->
+          <div class="mb-6">
+            <div class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-sm">
+              <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4">Care Setting Analysis</h3>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 class="text-base font-medium text-gray-700 dark:text-gray-300 mb-3">Facility Setting</h4>
+                  <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                      <span class="text-gray-600 dark:text-gray-400">Total Providers:</span>
+                      <span class="font-medium text-gray-800 dark:text-gray-200">15</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-gray-600 dark:text-gray-400">Total Services:</span>
+                      <span class="font-medium text-gray-800 dark:text-gray-200">87</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-gray-600 dark:text-gray-400">Total Beneficiaries:</span>
+                      <span class="font-medium text-gray-800 dark:text-gray-200">86</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-gray-600 dark:text-gray-400">Total Spending:</span>
+                      <span class="font-medium text-gray-800 dark:text-gray-200">$34,256.64</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 class="text-base font-medium text-gray-700 dark:text-gray-300 mb-3">Office Setting</h4>
+                  <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                      <span class="text-gray-600 dark:text-gray-400">Total Providers:</span>
+                      <span class="font-medium text-gray-800 dark:text-gray-200">2</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-gray-600 dark:text-gray-400">Total Services:</span>
+                      <span class="font-medium text-gray-800 dark:text-gray-200">14</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-gray-600 dark:text-gray-400">Total Beneficiaries:</span>
+                      <span class="font-medium text-gray-800 dark:text-gray-200">14</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="text-gray-600 dark:text-gray-400">Total Spending:</span>
+                      <span class="font-medium text-gray-800 dark:text-gray-200">$5,946.34</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Detailed Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="bg-gray-100 dark:bg-gray-700 text-xs uppercase text-gray-700 dark:text-gray-300">
+                <tr>
+                  <th scope="col" class="px-6 py-3 rounded-tl-lg">Year</th>
+                  <th scope="col" class="px-6 py-3">Directory</th>
+                  <th scope="col" class="px-6 py-3">Reimbursement Rate</th>
+                  <th scope="col" class="px-6 py-3">Payment Rate</th>
+                  <th scope="col" class="px-6 py-3">Combined Rate</th>
+                  <th scope="col" class="px-6 py-3 rounded-tr-lg">YoY Change</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                  <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">2020</td>
+                  <td class="px-6 py-4">618</td>
+                  <td class="px-6 py-4">38.82</td>
+                  <td class="px-6 py-4">19279.42</td>
+                  <td class="px-6 py-4 font-medium">19818.24</td>
+                  <td class="px-6 py-4">-</td>
+                </tr>
+                <tr class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                  <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">2021</td>
+                  <td class="px-6 py-4">618</td>
+                  <td class="px-6 py-4">40.49</td>
+                  <td class="px-6 py-4">20479.78</td>
+                  <td class="px-6 py-4 font-medium">21020.27</td>
+                  <td class="px-6 py-4 text-green-600 dark:text-green-400">+6.1%</td>
+                </tr>
+                <tr class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                  <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">2022</td>
+                  <td class="px-6 py-4">618</td>
+                  <td class="px-6 py-4">42.63</td>
+                  <td class="px-6 py-4">20912.55</td>
+                  <td class="px-6 py-4 font-medium">21455.18</td>
+                  <td class="px-6 py-4 text-green-600 dark:text-green-400">+2.1%</td>
+                </tr>
+                <tr class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                  <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">2023</td>
+                  <td class="px-6 py-4">618</td>
+                  <td class="px-6 py-4">41.86</td>
+                  <td class="px-6 py-4">21515.36</td>
+                  <td class="px-6 py-4 font-medium">22057.22</td>
+                  <td class="px-6 py-4 text-green-600 dark:text-green-400">+2.8%</td>
+                </tr>
+                <tr class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                  <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">2024A</td>
+                  <td class="px-6 py-4">618</td>
+                  <td class="px-6 py-4">30.46</td>
+                  <td class="px-6 py-4">20842.84</td>
+                  <td class="px-6 py-4 font-medium">21373.30</td>
+                  <td class="px-6 py-4 text-red-600 dark:text-red-400">-3.1%</td>
+                </tr>
+                <tr class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                  <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">2024B</td>
+                  <td class="px-6 py-4">618</td>
+                  <td class="px-6 py-4">39.26</td>
+                  <td class="px-6 py-4">20842.84</td>
+                  <td class="px-6 py-4 font-medium">21382.10</td>
+                  <td class="px-6 py-4 text-green-600 dark:text-green-400">+0.0%</td>
+                </tr>
+                <tr class="bg-white dark:bg-gray-800">
+                  <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">2025</td>
+                  <td class="px-6 py-4">618</td>
+                  <td class="px-6 py-4">27.57</td>
+                  <td class="px-6 py-4">21444.39</td>
+                  <td class="px-6 py-4 font-medium">21971.96</td>
+                  <td class="px-6 py-4 text-green-600 dark:text-green-400">+2.8%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dark mode toggle functionality
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const htmlElement = document.documentElement;
+    
+    // Check if dark mode is already enabled
+    if (localStorage.getItem('darkMode') === 'enabled' || 
+        window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      htmlElement.classList.add('dark');
+      darkModeToggle.checked = true;
+    }
+    
+    // Toggle dark mode
+    darkModeToggle.addEventListener('change', function() {
+      if (this.checked) {
+        htmlElement.classList.add('dark');
+        localStorage.setItem('darkMode', 'enabled');
+      } else {
+        htmlElement.classList.remove('dark');
+        localStorage.setItem('darkMode', 'disabled');
+      }
+      
+      // Redraw all charts with updated colors
+      setupCharts();
+    });
+    
+    // Tab switching functionality
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // Reset all tabs
+        tabButtons.forEach(btn => {
+          btn.classList.remove('bg-blue-500', 'dark:bg-blue-600', 'text-white');
+          btn.classList.add('bg-gray-200', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300');
+        });
+        
+        // Hide all content
+        tabContents.forEach(content => {
+          content.classList.add('hidden');
+          content.classList.remove('block');
+        });
+        
+        // Activate clicked tab
+        button.classList.remove('bg-gray-200', 'dark:bg-gray-800', 'text-gray-700', 'dark:text-gray-300');
+        button.classList.add('bg-blue-500', 'dark:bg-blue-600', 'text-white');
+        
+        // Show corresponding content
+        const contentId = button.id.replace('Tab', 'Content');
+        document.getElementById(contentId).classList.remove('hidden');
+        document.getElementById(contentId).classList.add('block');
+      });
+    });
+    
+    // Directory and Code selectors
+    const directorySelect = document.getElementById('directorySelect');
+    const codeSelect = document.getElementById('codeSelect');
+    
+    directorySelect.addEventListener('change', function() {
+      // Hide all directory data
+      document.querySelectorAll('.directory-data').forEach(el => {
+        el.style.display = 'none';
+      });
+      
+      // Show selected directory data
+      const selectedDir = this.value;
+      document.getElementById('directory' + selectedDir).style.display = 'block';
+    });
+    
+    codeSelect.addEventListener('change', function() {
+      // Hide all code data
+      document.querySelectorAll('.code-data').forEach(el => {
+        el.style.display = 'none';
+      });
+      
+      // Show selected code data
+      const selectedCode = this.value;
+      document.getElementById('code' + selectedCode).style.display = 'block';
+    });
+    
+    let charts = {}; // Object to store chart instances
+
+function setupCharts() {
+  const isDarkMode = document.documentElement.classList.contains('dark');
+  const textColor = isDarkMode ? '#D1D5DB' : '#374151';
+  const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+  
+  Chart.defaults.color = textColor;
+  Chart.defaults.borderColor = gridColor;
+
+  // Destroy existing charts if they exist
+  Object.values(charts).forEach(chart => chart.destroy());
+
+  // Overview Chart
+  const overviewCtx = document.getElementById('overviewChart').getContext('2d');
+  charts.overview = new Chart(overviewCtx, {
+    type: 'line',
+    data: {
+      labels: ['2020', '2021', '2022', '2023', '2024A', '2024B', '2025'],
+      datasets: [
+        {
+          label: 'Code 61885',
+          data: [19818.24, 21020.27, 21455.18, 22057.22, 21373.30, 21382.10, 21971.96],
+          borderColor: 'rgba(59, 130, 246, 0.8)',
+          backgroundColor: 'rgba(59, 130, 246, 0.2)',
+          tension: 0.4
+        },
+        {
+          label: 'Code 64568',
+          data: [29770.52, 30079.57, 30691.24, 29968.45, 30183.22, 30193.12, 31067.15],
+          borderColor: 'rgba(16, 185, 129, 0.8)',
+          backgroundColor: 'rgba(16, 185, 129, 0.2)',
+          tension: 0.4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        y: { 
+          title: { display: true, text: 'Combined Rate ($)' },
+          grid: { color: gridColor }
+        },
+        x: { grid: { color: gridColor } }
+      }
+    }
+  });
+
+  // Directory Chart
+  const directoryCtx = document.getElementById('directory618Chart').getContext('2d');
+  charts.directory = new Chart(directoryCtx, {
+    type: 'bar',
+    data: {
+      labels: ['61885', '61888', '61889', '61891', '61892'],
+      datasets: [{
+        label: '2023-2025 % Change',
+        data: [2.8, 4.1, -3.2, -1.7, -2.6],
+        backgroundColor: [
+          'rgba(59, 130, 246, 0.7)',
+          'rgba(16, 185, 129, 0.7)',
+          'rgba(239, 68, 68, 0.7)',
+          'rgba(239, 68, 68, 0.7)',
+          'rgba(239, 68, 68, 0.7)'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { 
+          title: { display: true, text: 'Percentage Change (%)' },
+          grid: { color: gridColor }
+        },
+        x: { grid: { color: gridColor } }
+      }
+    }
+  });
+
+  // Code 61885 Rate Chart
+  const code61885Ctx = document.getElementById('code61885Chart').getContext('2d');
+  charts.code61885 = new Chart(code61885Ctx, {
+    type: 'line',
+    data: {
+      labels: ['2020', '2021', '2022', '2023', '2024A', '2024B', '2025'],
+      datasets: [{
+        label: 'Combined Rate',
+        data: [19818.24, 21020.27, 21455.18, 22057.22, 21373.30, 21382.10, 21971.96],
+        borderColor: 'rgba(59, 130, 246, 0.8)',
+        backgroundColor: 'rgba(59, 130, 246, 0.2)',
+        borderWidth: 2,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return `${context.raw.toFixed(2)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        y: { 
+          title: { display: true, text: 'Combined Rate ($)' },
+          grid: { color: gridColor }
+        },
+        x: { grid: { color: gridColor } }
+      }
+    }
+  });
+
+  // Code 61885 Market Share Pie Chart
+  const code61885PieCtx = document.getElementById('code61885PieChart').getContext('2d');
+  charts.code61885Pie = new Chart(code61885PieCtx, {
+    type: 'pie',
+    data: {
+      labels: ['Medtronic', 'Abbott', 'Boston Scientific'],
+      datasets: [{
+        data: [60, 30, 10],
+        backgroundColor: [
+          'rgba(59, 130, 246, 0.7)',
+          'rgba(16, 185, 129, 0.7)',
+          'rgba(124, 58, 237, 0.7)'
+        ],
+        borderColor: isDarkMode ? 'rgba(17, 24, 39, 1)' : 'rgba(255, 255, 255, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { padding: 20, font: { size: 12 } }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              const value = context.raw;
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = Math.round((value / total) * 100);
+              return `${percentage}% market share`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+// Initialize everything when the page loads
+document.addEventListener('DOMContentLoaded', () => {
+  setupCharts();
+  
+  // Set initial states
+  document.getElementById('directory618').style.display = 'block';
+  document.getElementById('code61885').style.display = 'block';
+  
+  // Trigger initial tab
+  document.getElementById('overviewTab').click();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medicare Data Dashboard</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+  <style>
+    .dark {
+      --tw-bg-opacity: 1;
+      background-color: rgba(17, 24, 39, var(--tw-bg-opacity));
+      color: white;
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 300px;
+      width: 100%;
+    }
+    
+    .collapsed {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+    
+    .expanded {
+      max-height: 2000px;
+      transition: max-height 0.6s ease-in;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    .dark ::-webkit-scrollbar-track {
+      background: #374151;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #4B5563;
+    }
+    .dark ::-webkit-scrollbar-thumb:hover {
+      background: #6B7280;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-200">
+  
+  <!-- Navbar -->
+  <nav class="bg-white dark:bg-gray-800 shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <i class="fas fa-heartbeat text-blue-600 dark:text-blue-400 text-2xl mr-2"></i>
+          <span class="font-bold text-xl">Medicare Analytics</span>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button id="darkModeToggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none">
+            <i class="fas fa-moon dark:hidden"></i>
+            <i class="fas fa-sun hidden dark:block text-yellow-300"></i>
+          </button>
+          <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+            Export Data
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Dashboard Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Medicare Reimbursement Dashboard</h1>
+      <p class="mt-2 text-gray-600 dark:text-gray-400">Comprehensive analysis of reimbursement rates, payments, and market trends across multiple codes and years.</p>
+    </div>
+    
+    <!-- Summary Metrics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <!-- Directory 618 Card -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-l-4 border-blue-500">
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900 mr-4">
+            <i class="fas fa-brain text-blue-500 dark:text-blue-300"></i>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Directory 618</p>
+            <p class="text-xl font-semibold" id="dir618Total">$36,057.65</p>
+            <p class="text-sm font-medium text-red-500" id="dir618Change">-2.27% from 2024B</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Directory 645 Card -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-l-4 border-green-500">
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-green-100 dark:bg-green-900 mr-4">
+            <i class="fas fa-heartbeat text-green-500 dark:text-green-300"></i>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Directory 645</p>
+            <p class="text-xl font-semibold" id="dir645Total">$44,303.10</p>
+            <p class="text-sm font-medium text-red-500" id="dir645Change">-2.12% from 2024B</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Directory 959 Card -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 border-l-4 border-purple-500">
+        <div class="flex items-center">
+          <div class="p-3 rounded-full bg-purple-100 dark:bg-purple-900 mr-4">
+            <i class="fas fa-code text-purple-500 dark:text-purple-300"></i>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Directory 959</p>
+            <p class="text-xl font-semibold" id="dir959Total">$219.88</p>
+            <p class="text-sm font-medium text-green-500" id="dir959Change">+3.64% from 2024B</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <!-- Trend Chart -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-4">Reimbursement Trends (All Codes)</h2>
+        <div class="chart-container">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+      
+      <!-- Directory Comparison -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-4">Directory Comparison (2025)</h2>
+        <div class="chart-container">
+          <canvas id="directoryChart"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Code Categories Section -->
+    <div class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">Code Categories</h2>
+      
+      <!-- Directory 618 Section -->
+      <div class="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <div class="p-4 bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-500">
+          <h3 class="text-lg font-semibold">Directory 618 - Neurostimulator Implantation</h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Code</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Reimbursement</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Payment</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Combined</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">% Change</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <!-- 61885 -->
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">61885</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">Insertion of brain neurostimulator pulse device</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$527.57</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$21,444.39</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$21,971.96</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">-2.17%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <button class="toggle-details text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300" data-code="61885">
+                    <i class="fas fa-chevron-down"></i> Details
+                  </button>
+                </td>
+              </tr>
+              <!-- 61885 Details -->
+              <tr class="details-row bg-gray-50 dark:bg-gray-700 collapsed" id="details-61885">
+                <td colspan="7" class="px-6 py-4">
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <h4 class="font-semibold mb-2">Historical Data</h4>
+                      <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                          <thead class="bg-gray-100 dark:bg-gray-600">
+                            <tr>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Year</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Reimbursement</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Payment</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Combined</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                            <tr><td class="px-3 py-2 text-xs">2020</td><td class="px-3 py-2 text-xs">$538.82</td><td class="px-3 py-2 text-xs">$19,279.42</td><td class="px-3 py-2 text-xs">$19,818.24</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2021</td><td class="px-3 py-2 text-xs">$540.49</td><td class="px-3 py-2 text-xs">$20,479.78</td><td class="px-3 py-2 text-xs">$21,020.27</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2022</td><td class="px-3 py-2 text-xs">$542.63</td><td class="px-3 py-2 text-xs">$20,912.55</td><td class="px-3 py-2 text-xs">$21,455.18</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2023</td><td class="px-3 py-2 text-xs">$541.86</td><td class="px-3 py-2 text-xs">$21,515.36</td><td class="px-3 py-2 text-xs">$22,057.22</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024A</td><td class="px-3 py-2 text-xs">$530.46</td><td class="px-3 py-2 text-xs">$20,842.84</td><td class="px-3 py-2 text-xs">$21,373.30</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024B</td><td class="px-3 py-2 text-xs">$539.26</td><td class="px-3 py-2 text-xs">$20,842.84</td><td class="px-3 py-2 text-xs">$21,382.10</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2025</td><td class="px-3 py-2 text-xs">$527.57</td><td class="px-3 py-2 text-xs">$21,444.39</td><td class="px-3 py-2 text-xs">$21,971.96</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold mb-2">Market Information</h4>
+                      <div class="space-y-2">
+                        <p class="text-sm"><span class="font-medium">Total Services:</span> 1,786</p>
+                        <p class="text-sm"><span class="font-medium">Total Beneficiaries:</span> 1,728</p>
+                        <p class="text-sm"><span class="font-medium">Total Spending:</span> $1,073,109.88</p>
+                        <p class="text-sm"><span class="font-medium">Provider Count:</span> 95</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Submitted Charge:</span> $3,489.46</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Medicare Payment:</span> $573.09</p>
+                      </div>
+                      
+                      <div class="mt-4">
+                        <h4 class="font-semibold mb-2">Revenue Splits</h4>
+                        <div class="chart-container" style="height: 200px;">
+                          <canvas id="revenueSplit-61885"></canvas>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-4">
+                    <h4 class="font-semibold mb-2">Year-over-Year Percent Change</h4>
+                    <div class="chart-container">
+                      <canvas id="changeChart-61885"></canvas>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- 61888 -->
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">61888</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">Removal of brain neurostimulator device</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$394.95</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$12,470.31</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$12,865.26</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">-2.51%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <button class="toggle-details text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300" data-code="61888">
+                    <i class="fas fa-chevron-down"></i> Details
+                  </button>
+                </td>
+              </tr>
+              <!-- 61888 Details -->
+              <tr class="details-row bg-gray-50 dark:bg-gray-700 collapsed" id="details-61888">
+                <td colspan="7" class="px-6 py-4">
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <h4 class="font-semibold mb-2">Historical Data</h4>
+                      <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                          <thead class="bg-gray-100 dark:bg-gray-600">
+                            <tr>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Year</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Reimbursement</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Payment</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Combined</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                            <tr><td class="px-3 py-2 text-xs">2020</td><td class="px-3 py-2 text-xs">$411.06</td><td class="px-3 py-2 text-xs">$6,187.13</td><td class="px-3 py-2 text-xs">$6,598.19</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2021</td><td class="px-3 py-2 text-xs">$409.99</td><td class="px-3 py-2 text-xs">$11,236.21</td><td class="px-3 py-2 text-xs">$11,646.20</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2022</td><td class="px-3 py-2 text-xs">$411.81</td><td class="px-3 py-2 text-xs">$11,483.38</td><td class="px-3 py-2 text-xs">$11,895.19</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2023</td><td class="px-3 py-2 text-xs">$409.02</td><td class="px-3 py-2 text-xs">$11,952.59</td><td class="px-3 py-2 text-xs">$12,361.61</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024A</td><td class="px-3 py-2 text-xs">$398.50</td><td class="px-3 py-2 text-xs">$12,978.95</td><td class="px-3 py-2 text-xs">$13,377.45</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024B</td><td class="px-3 py-2 text-xs">$405.11</td><td class="px-3 py-2 text-xs">$12,978.95</td><td class="px-3 py-2 text-xs">$13,384.06</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2025</td><td class="px-3 py-2 text-xs">$394.95</td><td class="px-3 py-2 text-xs">$12,470.31</td><td class="px-3 py-2 text-xs">$12,865.26</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold mb-2">Market Information</h4>
+                      <div class="space-y-2">
+                        <p class="text-sm"><span class="font-medium">Total Services:</span> 52</p>
+                        <p class="text-sm"><span class="font-medium">Total Beneficiaries:</span> 51</p>
+                        <p class="text-sm"><span class="font-medium">Total Spending:</span> $13,887.22</p>
+                        <p class="text-sm"><span class="font-medium">Provider Count:</span> 4</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Submitted Charge:</span> $1,410.88</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Medicare Payment:</span> $262.96</p>
+                      </div>
+                      
+                      <div class="mt-4">
+                        <h4 class="font-semibold mb-2">Revenue Splits</h4>
+                        <div class="chart-container" style="height: 200px;">
+                          <canvas id="revenueSplit-61888"></canvas>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-4">
+                    <h4 class="font-semibold mb-2">Year-over-Year Percent Change</h4>
+                    <div class="chart-container">
+                      <canvas id="changeChart-61888"></canvas>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- Other new codes -->
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">61889</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">Related neurostimulator analysis/programming</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$1,220.43</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">N/A</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$1,220.43</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">-3.31%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <button class="toggle-details text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300" data-code="61889">
+                    <i class="fas fa-chevron-down"></i> Details
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Directory 645 Section -->
+      <div class="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <div class="p-4 bg-green-50 dark:bg-green-900 border-l-4 border-green-500">
+          <h3 class="text-lg font-semibold">Directory 645 - Neurological Procedures</h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Code</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Reimbursement</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Payment</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Combined</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">% Change</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <!-- 64568 -->
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">64568</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">Cranial nerve neurostimulator implantation</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$593.56</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$30,473.59</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$31,067.15</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">-2.19%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <button class="toggle-details text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300" data-code="64568">
+                    <i class="fas fa-chevron-down"></i> Details
+                  </button>
+                </td>
+              </tr>
+              <!-- 64568 Details -->
+              <tr class="details-row bg-gray-50 dark:bg-gray-700 collapsed" id="details-64568">
+                <td colspan="7" class="px-6 py-4">
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <h4 class="font-semibold mb-2">Historical Data</h4>
+                      <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                          <thead class="bg-gray-100 dark:bg-gray-600">
+                            <tr>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Year</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Reimbursement</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Payment</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Combined</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                            <tr><td class="px-3 py-2 text-xs">2020</td><td class="px-3 py-2 text-xs">$651.78</td><td class="px-3 py-2 text-xs">$29,118.74</td><td class="px-3 py-2 text-xs">$29,770.52</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2021</td><td class="px-3 py-2 text-xs">$635.05</td><td class="px-3 py-2 text-xs">$29,444.52</td><td class="px-3 py-2 text-xs">$30,079.57</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2022</td><td class="px-3 py-2 text-xs">$627.76</td><td class="px-3 py-2 text-xs">$30,063.48</td><td class="px-3 py-2 text-xs">$30,691.24</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2023</td><td class="px-3 py-2 text-xs">$609.97</td><td class="px-3 py-2 text-xs">$29,358.48</td><td class="px-3 py-2 text-xs">$29,968.45</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024A</td><td class="px-3 py-2 text-xs">$596.93</td><td class="px-3 py-2 text-xs">$29,586.29</td><td class="px-3 py-2 text-xs">$30,183.22</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024B</td><td class="px-3 py-2 text-xs">$606.83</td><td class="px-3 py-2 text-xs">$29,586.29</td><td class="px-3 py-2 text-xs">$30,193.12</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2025</td><td class="px-3 py-2 text-xs">$593.56</td><td class="px-3 py-2 text-xs">$30,473.59</td><td class="px-3 py-2 text-xs">$31,067.15</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold mb-2">Market Information</h4>
+                      <div class="space-y-2">
+                        <p class="text-sm"><span class="font-medium">Provider Count:</span> Not Available</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Submitted Charge:</span> Not Available</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Medicare Payment:</span> Not Available</p>
+                      </div>
+                      
+                      <div class="mt-4">
+                        <h4 class="font-semibold mb-2">Year-over-Year Percent Change</h4>
+                        <div class="chart-container" style="height: 200px;">
+                          <canvas id="changeChart-64568"></canvas>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- 64569 -->
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">64569</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">Revision/replacement of cranial neurostimulator</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$765.64</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$12,470.31</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$13,235.95</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">-2.04%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <button class="toggle-details text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300" data-code="64569">
+                    <i class="fas fa-chevron-down"></i> Details
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Directory 959 Section -->
+      <div class="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <div class="p-4 bg-purple-50 dark:bg-purple-900 border-l-4 border-purple-500">
+          <h3 class="text-lg font-semibold">Directory 959 - Neurostimulator Analysis & Programming</h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Code</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Reimbursement</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Payment</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Combined</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">% Change</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <!-- 95970 -->
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">95970</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">Electronic analysis of neurostimulator</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$17.79</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$128.90</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$146.69</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-500">+5.01%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <button class="toggle-details text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300" data-code="95970">
+                    <i class="fas fa-chevron-down"></i> Details
+                  </button>
+                </td>
+              </tr>
+              <!-- 95970 Details -->
+              <tr class="details-row bg-gray-50 dark:bg-gray-700 collapsed" id="details-95970">
+                <td colspan="7" class="px-6 py-4">
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <h4 class="font-semibold mb-2">Historical Data</h4>
+                      <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                          <thead class="bg-gray-100 dark:bg-gray-600">
+                            <tr>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Year</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Reimbursement</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Payment</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300">Combined</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                            <tr><td class="px-3 py-2 text-xs">2020</td><td class="px-3 py-2 text-xs">$19.49</td><td class="px-3 py-2 text-xs">$109.03</td><td class="px-3 py-2 text-xs">$128.52</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2021</td><td class="px-3 py-2 text-xs">$19.19</td><td class="px-3 py-2 text-xs">$111.95</td><td class="px-3 py-2 text-xs">$131.14</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2022</td><td class="px-3 py-2 text-xs">$19.03</td><td class="px-3 py-2 text-xs">$115.16</td><td class="px-3 py-2 text-xs">$134.19</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2023</td><td class="px-3 py-2 text-xs">$18.64</td><td class="px-3 py-2 text-xs">$116.11</td><td class="px-3 py-2 text-xs">$134.75</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024A</td><td class="px-3 py-2 text-xs">$17.68</td><td class="px-3 py-2 text-xs">$121.71</td><td class="px-3 py-2 text-xs">$139.39</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024B</td><td class="px-3 py-2 text-xs">$17.98</td><td class="px-3 py-2 text-xs">$121.71</td><td class="px-3 py-2 text-xs">$139.69</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2025</td><td class="px-3 py-2 text-xs">$17.79</td><td class="px-3 py-2 text-xs">$128.90</td><td class="px-3 py-2 text-xs">$146.69</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold mb-2">Market Information</h4>
+                      <div class="space-y-2">
+                        <p class="text-sm"><span class="font-medium">Total Services:</span> 14,769</p>
+                        <p class="text-sm"><span class="font-medium">Total Beneficiaries:</span> 10,325</p>
+                        <p class="text-sm"><span class="font-medium">Total Spending:</span> $191,802.80</p>
+                        <p class="text-sm"><span class="font-medium">Provider Count:</span> 495</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Submitted Charge:</span> $158.64</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Medicare Payment:</span> $12.96</p>
+                      </div>
+                      
+                      <div class="mt-4">
+                        <h4 class="font-semibold mb-2">Revenue Splits</h4>
+                        <div class="chart-container" style="height: 200px;">
+                          <canvas id="revenueSplit-95970"></canvas>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-4">
+                    <h4 class="font-semibold mb-2">Year-over-Year Percent Change</h4>
+                    <div class="chart-container">
+                      <canvas id="changeChart-95970"></canvas>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- Other codes in 959 directory -->
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">95976</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">Simple cranial nerve programming</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$35.90</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$37.29</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$73.19</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">-1.37%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <button class="toggle-details text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300" data-code="95976">
+                    <i class="fas fa-chevron-down"></i> Details
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Market Analysis Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+      <h2 class="text-2xl font-bold mb-4">Market Analysis</h2>
+      
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Fastest Growing Codes</h3>
+          <div class="chart-container">
+            <canvas id="growthChart"></canvas>
+          </div>
+        </div>
+        
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Market Size by Directory</h3>
+          <div class="chart-container">
+            <canvas id="marketSizeChart"></canvas>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mt-8">
+        <h3 class="text-lg font-semibold mb-4">Key Insights</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
+            <h4 class="font-medium text-blue-800 dark:text-blue-300 mb-2">Reimbursement Trends</h4>
+            <p class="text-sm">There's a general downward trend in reimbursement rates across most codes, with an average decline of 2.1% from 2024B to 2025. However, payments have generally increased, especially for codes in the 959 directory.</p>
+          </div>
+          
+          <div class="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
+            <h4 class="font-medium text-green-800 dark:text-green-300 mb-2">Market Growth</h4>
+            <p class="text-sm">Code 95970 shows the strongest growth in combined payments (+5.01%), despite declining reimbursement rates. This suggests increasing utilization and provider adoption.</p>
+          </div>
+          
+          <div class="bg-purple-50 dark:bg-purple-900/30 p-4 rounded-lg">
+            <h4 class="font-medium text-purple-800 dark:text-purple-300 mb-2">New Codes</h4>
+            <p class="text-sm">Codes 61889, 61891, and 61892 were introduced in 2024A and have only reimbursement values, with no payment data yet. These represent new procedures that may develop payment structures in future updates.</p>
+          </div>
+          
+          <div class="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-lg">
+            <h4 class="font-medium text-yellow-800 dark:text-yellow-300 mb-2">Directory Analysis</h4>
+            <p class="text-sm">Directory 645 has the highest total combined value at $44,303.10, representing 54.8% of the total market. This directory focuses on neurological procedures with higher reimbursement rates.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Plain English Summary Section -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-8">
+      <h2 class="text-2xl font-bold mb-4">Summary Analysis</h2>
+      
+      <div class="prose dark:prose-invert max-w-none">
+        <p class="mb-4">The Medicare Reimbursement Dashboard provides valuable insights into the reimbursement and payment trends for neurostimulator procedures across multiple years. Here's what the data tells us:</p>
+        
+        <h3 class="text-lg font-semibold mt-6 mb-2">What This Data Shows</h3>
+        <ul class="list-disc pl-6 space-y-2 mb-4">
+          <li>Most reimbursement rates are declining slightly (average -2.1% from 2024B to 2025), but the overall payments for these procedures are generally stable or increasing.</li>
+          <li>The neurostimulator analysis procedures (959 directory) show the strongest growth, particularly code 95970 which increased by 5.01%.</li>
+          <li>High-value implantation procedures (618 and 645 directories) represent the bulk of the market value, with Directory 645 accounting for over half of the total market value.</li>
+          <li>There are significant pricing differences between years, with some codes showing volatile changes over time.</li>
+        </ul>
+        
+        <h3 class="text-lg font-semibold mt-6 mb-2">How You Can Use This Dashboard</h3>
+        <ul class="list-disc pl-6 space-y-2 mb-4">
+          <li><strong>Financial Planning:</strong> Healthcare providers can use this data to forecast revenue and make budget decisions for neurostimulator-related services.</li>
+          <li><strong>Strategic Planning:</strong> Identify which codes are growing or declining to adjust service offerings accordingly.</li>
+          <li><strong>Contract Negotiations:</strong> Use these benchmarks when negotiating rates with private insurers by understanding Medicare's valuations.</li>
+          <li><strong>Comparative Analysis:</strong> Compare your facility's reimbursement and utilization patterns against national trends.</li>
+          <li><strong>Tracking Policy Changes:</strong> Monitor how CMS policy changes affect reimbursement rates over time, which can help in advocacy efforts.</li>
+        </ul>
+        
+        <h3 class="text-lg font-semibold mt-6 mb-2">Actionable Insights</h3>
+        <ol class="list-decimal pl-6 space-y-2">
+          <li>The most financially sustainable services appear to be in the 959 directory (neurostimulator analysis and programming), which show positive growth trends despite overall downward pressure on reimbursement rates.</li>
+          <li>Implantation procedures (618 directory) remain high-value but face declining reimbursements, suggesting a focus on operational efficiency may be necessary.</li>
+          <li>New codes (such as 61889) without established payment values should be monitored closely as they represent emerging procedures that may present future opportunities.</li>
+          <li>The detailed year-over-year data reveals longer-term patterns that can help predict future reimbursement trends beyond simple annual comparisons.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Footer -->
+  <footer class="bg-white dark:bg-gray-800 shadow-md mt-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <p class="text-sm text-gray-500 dark:text-gray-400">Medicare Data Dashboard</p>
+          <p class="text-xs text-gray-400 dark:text-gray-500">Last updated: March 23, 2025</p>
+        </div>
+        <div class="flex space-x-4">
+          <button class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+            Export to PDF
+          </button>
+          <button class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300">
+            Export to CSV
+          </button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Toggle dark mode
+    document.getElementById('darkModeToggle').addEventListener('click', function() {
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+    });
+    
+    // Check for saved dark mode preference
+    if (localStorage.getItem('darkMode') === 'true' || 
+        (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches && 
+         localStorage.getItem('darkMode') !== 'false')) {
+      document.documentElement.classList.add('dark');
+    }
+    
+    // Toggle details sections
+    document.querySelectorAll('.toggle-details').forEach(button => {
+      button.addEventListener('click', function() {
+        const codeId = this.getAttribute('data-code');
+        const detailsRow = document.getElementById(`details-${codeId}`);
+        
+        if (detailsRow.classList.contains('collapsed')) {
+          detailsRow.classList.remove('collapsed');
+          detailsRow.classList.add('expanded');
+          this.innerHTML = '<i class="fas fa-chevron-up"></i> Hide Details';
+        } else {
+          detailsRow.classList.remove('expanded');
+          detailsRow.classList.add('collapsed');
+          this.innerHTML = '<i class="fas fa-chevron-down"></i> Details';
+        }
+      });
+    });
+    
+    // Define the data structure for all codes
+    const medicalCodeData = {
+      // Directory 618
+      '61885': {
+        description: 'Insertion of brain neurostimulator pulse device',
+        historical: [
+          {year: '2020', reimbursement: 538.82, payment: 19279.42, combined: 19818.24},
+          {year: '2021', reimbursement: 540.49, payment: 20479.78, combined: 21020.27},
+          {year: '2022', reimbursement: 542.63, payment: 20912.55, combined: 21455.18},
+          {year: '2023', reimbursement: 541.86, payment: 21515.36, combined: 22057.22},
+          {year: '2024A', reimbursement: 530.46, payment: 20842.84, combined: 21373.30},
+          {year: '2024B', reimbursement: 539.26, payment: 20842.84, combined: 21382.10},
+          {year: '2025', reimbursement: 527.57, payment: 21444.39, combined: 21971.96}
+        ],
+        yearOverYear: {
+          reimbursement: [0.31, 0.4, -0.14, -2.1, 1.66, -2.17],
+          payment: [6.23, 2.11, 2.88, -3.13, 0, 2.89],
+          combined: [6.07, 2.07, 2.81, -3.1, 0.04, 2.76]
+        },
+        revenueSplit: {
+          facility: 34256.64,
+          office: 5946.34
+        },
+        directory: '618'
+      },
+      '61888': {
+        description: 'Removal of brain neurostimulator device',
+        historical: [
+          {year: '2020', reimbursement: 411.06, payment: 6187.13, combined: 6598.19},
+          {year: '2021', reimbursement: 409.99, payment: 11236.21, combined: 11646.20},
+          {year: '2022', reimbursement: 411.81, payment: 11483.38, combined: 11895.19},
+          {year: '2023', reimbursement: 409.02, payment: 11952.59, combined: 12361.61},
+          {year: '2024A', reimbursement: 398.50, payment: 12978.95, combined: 13377.45},
+          {year: '2024B', reimbursement: 405.11, payment: 12978.95, combined: 13384.06},
+          {year: '2025', reimbursement: 394.95, payment: 12470.31, combined: 12865.26}
+        ],
+        yearOverYear: {
+          reimbursement: [-0.26, 0.44, -0.68, -2.57, 1.66, -2.51],
+          payment: [81.61, 2.2, 4.09, 8.59, 0, -3.92],
+          combined: [76.51, 2.14, 3.92, 8.22, 0.05, -3.88]
+        },
+        revenueSplit: {
+          facility: 23944.86,
+          office: 0
+        },
+        directory: '618'
+      },
+      '61889': {
+        description: 'Related neurostimulator analysis/programming',
+        historical: [
+          {year: '2024A', reimbursement: 1262.24, payment: null, combined: 1262.24},
+          {year: '2024B', reimbursement: 1262.24, payment: null, combined: 1262.24},
+          {year: '2025', reimbursement: 1220.43, payment: null, combined: 1220.43}
+        ],
+        yearOverYear: {
+          reimbursement: [0, -3.31],
+          payment: [0, 0],
+          combined: [0, -3.31]
+        },
+        directory: '618'
+      },
+      
+      // Directory 645
+      '64568': {
+        description: 'Cranial nerve neurostimulator implantation',
+        historical: [
+          {year: '2020', reimbursement: 651.78, payment: 29118.74, combined: 29770.52},
+          {year: '2021', reimbursement: 635.05, payment: 29444.52, combined: 30079.57},
+          {year: '2022', reimbursement: 627.76, payment: 30063.48, combined: 30691.24},
+          {year: '2023', reimbursement: 609.97, payment: 29358.48, combined: 29968.45},
+          {year: '2024A', reimbursement: 596.93, payment: 29586.29, combined: 30183.22},
+          {year: '2024B', reimbursement: 606.83, payment: 29586.29, combined: 30193.12},
+          {year: '2025', reimbursement: 593.56, payment: 30473.59, combined: 31067.15}
+        ],
+        yearOverYear: {
+          reimbursement: [-2.57, -1.15, -2.83, -2.14, 1.66, -2.19],
+          payment: [1.12, 2.1, -2.35, 0.78, 0, 3],
+          combined: [1.04, 2.03, -2.36, 0.72, 0.03, 2.89]
+        },
+        directory: '645'
+      },
+      '64569': {
+        description: 'Revision/replacement of cranial neurostimulator',
+        historical: [
+          {year: '2020', reimbursement: 789.46, payment: 10284.32, combined: 11073.78},
+          {year: '2021', reimbursement: 785.12, payment: 11546.37, combined: 12331.49},
+          {year: '2022', reimbursement: 781.47, payment: 11821.24, combined: 12602.71},
+          {year: '2023', reimbursement: 770.26, payment: 11963.57, combined: 12733.83},
+          {year: '2024A', reimbursement: 765.31, payment: 12263.43, combined: 13028.74},
+          {year: '2024B', reimbursement: 781.58, payment: 12263.43, combined: 13045.01},
+          {year: '2025', reimbursement: 765.64, payment: 12470.31, combined: 13235.95}
+        ],
+        yearOverYear: {
+          reimbursement: [-0.55, -0.47, -1.44, -0.64,2.13, -2.04],
+          payment: [12.27, 2.38, 1.2, 2.51, 0, 1.69],
+          combined: [11.36, 2.2, 1.04, 2.32, 0.12, 1.46]
+        },
+        directory: '645'
+      },
+      
+      // Directory 959
+      '95970': {
+        description: 'Electronic analysis of neurostimulator',
+        historical: [
+          {year: '2020', reimbursement: 19.49, payment: 109.03, combined: 128.52},
+          {year: '2021', reimbursement: 19.19, payment: 111.95, combined: 131.14},
+          {year: '2022', reimbursement: 19.03, payment: 115.16, combined: 134.19},
+          {year: '2023', reimbursement: 18.64, payment: 116.11, combined: 134.75},
+          {year: '2024A', reimbursement: 17.68, payment: 121.71, combined: 139.39},
+          {year: '2024B', reimbursement: 17.98, payment: 121.71, combined: 139.69},
+          {year: '2025', reimbursement: 17.79, payment: 128.90, combined: 146.69}
+        ],
+        yearOverYear: {
+          reimbursement: [-1.54, -0.83, -2.05, -5.15, 1.7, -1.06],
+          payment: [2.68, 2.87, 0.82, 4.82, 0, 5.91],
+          combined: [2.04, 2.33, 0.42, 3.44, 0.22, 5.01]
+        },
+        revenueSplit: {
+          facility: 5087.88,
+          office: 271.37
+        },
+        directory: '959'
+      },
+      '95976': {
+        description: 'Simple cranial nerve programming',
+        historical: [
+          {year: '2020', reimbursement: 36.72, payment: 32.54, combined: 69.26},
+          {year: '2021', reimbursement: 36.58, payment: 33.12, combined: 69.70},
+          {year: '2022', reimbursement: 36.29, payment: 34.67, combined: 70.96},
+          {year: '2023', reimbursement: 36.13, payment: 35.42, combined: 71.55},
+          {year: '2024A', reimbursement: 35.47, payment: 36.54, combined: 72.01},
+          {year: '2024B', reimbursement: 36.39, payment: 36.54, combined: 72.93},
+          {year: '2025', reimbursement: 35.90, payment: 37.29, combined: 73.19}
+        ],
+        yearOverYear: {
+          reimbursement: [-0.38, -0.79, -0.44, -1.83, 2.59, -1.35],
+          payment: [1.78, 4.68, 2.16, 3.16, 0, 2.05],
+          combined: [0.64, 1.81, 0.83, 0.64, 1.28, 0.36]
+        },
+        directory: '959'
+      }
+    };
+
+    // Define colors for charts
+    const chartColors = {
+      blue: 'rgba(59, 130, 246, 0.7)',
+      green: 'rgba(16, 185, 129, 0.7)',
+      purple: 'rgba(139, 92, 246, 0.7)',
+      yellow: 'rgba(245, 158, 11, 0.7)',
+      red: 'rgba(239, 68, 68, 0.7)',
+      orange: 'rgba(249, 115, 22, 0.7)',
+      cyan: 'rgba(6, 182, 212, 0.7)',
+      pink: 'rgba(236, 72, 153, 0.7)',
+      indigo: 'rgba(99, 102, 241, 0.7)',
+      borderBlue: 'rgba(59, 130, 246, 1)',
+      borderGreen: 'rgba(16, 185, 129, 1)',
+      borderPurple: 'rgba(139, 92, 246, 1)',
+      borderYellow: 'rgba(245, 158, 11, 1)',
+      borderRed: 'rgba(239, 68, 68, 1)',
+      borderOrange: 'rgba(249, 115, 22, 1)',
+      borderCyan: 'rgba(6, 182, 212, 1)',
+      borderPink: 'rgba(236, 72, 153, 1)',
+      borderIndigo: 'rgba(99, 102, 241, 1)'
+    };
+    
+    // Define color palettes for directories
+    const directoryColors = {
+      '618': {
+        bg: chartColors.blue,
+        border: chartColors.borderBlue
+      },
+      '645': {
+        bg: chartColors.green,
+        border: chartColors.borderGreen
+      },
+      '959': {
+        bg: chartColors.purple,
+        border: chartColors.borderPurple
+      }
+    };
+    
+    // Initialize charts when the DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      // Calculate directory totals and update metric cards
+      calculateDirectoryTotals();
+      
+      // Initialize all charts
+      createTrendChart();
+      createDirectoryChart();
+      createGrowthChart();
+      createMarketSizeChart();
+      
+      // Create individual code-specific charts
+      Object.keys(medicalCodeData).forEach(code => {
+        // Create revenue split charts if data exists
+        if (medicalCodeData[code].revenueSplit) {
+          createRevenueSplitChart(code, medicalCodeData[code].revenueSplit);
+        }
+        
+        // Create year-over-year change charts if data exists
+        if (medicalCodeData[code].yearOverYear) {
+          createChangeChart(code, medicalCodeData[code].yearOverYear);
+        }
+      });
+    });
+    
+    // Calculate and update directory totals
+    function calculateDirectoryTotals() {
+      // Get the latest year data for all codes
+      const latestYearData = {};
+      const directoryTotals = {
+        '618': { reimbursement: 0, payment: 0, combined: 0 },
+        '645': { reimbursement: 0, payment: 0, combined: 0 },
+        '959': { reimbursement: 0, payment: 0, combined: 0 }
+      };
+      
+      // Calculate totals by directory
+      Object.keys(medicalCodeData).forEach(code => {
+        const data = medicalCodeData[code];
+        const dir = data.directory;
+        const latest = data.historical[data.historical.length - 1];
+        const previousYear = data.historical[data.historical.length - 2];
+        
+        if (dir && latest) {
+          directoryTotals[dir].reimbursement += latest.reimbursement || 0;
+          directoryTotals[dir].payment += latest.payment || 0;
+          directoryTotals[dir].combined += latest.combined || 0;
+          
+          // Store latest and previous year data for percent change calculation
+          latestYearData[dir] = {
+            current: latest,
+            previous: previousYear
+          };
+        }
+      });
+      
+      // Update the directory summary cards
+      updateDirectorySummaryCard('618', directoryTotals['618'], latestYearData['618']);
+      updateDirectorySummaryCard('645', directoryTotals['645'], latestYearData['645']);
+      updateDirectorySummaryCard('959', directoryTotals['959'], latestYearData['959']);
+    }
+    
+    // Update a directory summary card with calculated totals
+    function updateDirectorySummaryCard(dirNumber, totals, yearData) {
+      const totalElement = document.getElementById(`dir${dirNumber}Total`);
+      const changeElement = document.getElementById(`dir${dirNumber}Change`);
+      
+      if (totalElement) {
+        totalElement.textContent = `$${totals.combined.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+      }
+      
+      if (changeElement && yearData && yearData.current && yearData.previous) {
+        const percentChange = ((yearData.current.combined - yearData.previous.combined) / yearData.previous.combined) * 100;
+        const formattedChange = percentChange.toFixed(2);
+        
+        changeElement.textContent = `${formattedChange >= 0 ? '+' : ''}${formattedChange}% from 2024B`;
+        
+        // Set color based on positive or negative change
+        if (percentChange >= 0) {
+          changeElement.classList.remove('text-red-500');
+          changeElement.classList.add('text-green-500');
+        } else {
+          changeElement.classList.remove('text-green-500');
+          changeElement.classList.add('text-red-500');
+        }
+      }
+    }
+    
+    // Create the reimbursement trend chart showing all codes
+    function createTrendChart() {
+      const trendCtx = document.getElementById('trendChart');
+      if (!trendCtx) return;
+      
+      // Prepare datasets
+      const datasets = [];
+      const colorChoices = [
+        chartColors.blue, chartColors.green, chartColors.purple, 
+        chartColors.yellow, chartColors.red, chartColors.orange,
+        chartColors.cyan, chartColors.pink, chartColors.indigo
+      ];
+      
+      let colorIndex = 0;
+      Object.keys(medicalCodeData).forEach(code => {
+        const data = medicalCodeData[code];
+        
+        // Only add if we have historical data
+        if (data.historical && data.historical.length > 0) {
+          const color = colorChoices[colorIndex % colorChoices.length];
+          const borderColor = color.replace('0.7', '1');
+          
+          // Add reimbursement dataset
+          datasets.push({
+            label: `${code} - Reimbursement`,
+            data: data.historical.map(item => item.reimbursement),
+            borderColor: borderColor,
+            backgroundColor: color,
+            tension: 0.1,
+            pointRadius: 3,
+            hoverPointRadius: 5
+          });
+          
+          colorIndex++;
+        }
+      });
+      
+      // Create chart
+      new Chart(trendCtx, {
+        type: 'line',
+        data: {
+          labels: ['2020', '2021', '2022', '2023', '2024A', '2024B', '2025'],
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                boxWidth: 12,
+                usePointStyle: true
+              }
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: false,
+              title: {
+                display: true,
+                text: 'Amount ($)'
+              }
+            }
+          },
+          interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
+          }
+        }
+      });
+    }
+    
+    // Create the directory comparison chart
+    function createDirectoryChart() {
+      const dirCtx = document.getElementById('directoryChart');
+      if (!dirCtx) return;
+      
+      // Aggregate data by directory
+      const dirData = {
+        '618': 0,
+        '645': 0,
+        '959': 0
+      };
+      
+      // Calculate totals by directory
+      Object.keys(medicalCodeData).forEach(code => {
+        const data = medicalCodeData[code];
+        const dir = data.directory;
+        const latest = data.historical[data.historical.length - 1];
+        
+        if (dir && latest) {
+          dirData[dir] += latest.combined || 0;
+        }
+      });
+      
+      // Create chart
+      new Chart(dirCtx, {
+        type: 'bar',
+        data: {
+          labels: ['618 - Neurostimulator Implantation', '645 - Neurological Procedures', '959 - Analysis & Programming'],
+          datasets: [{
+            label: '2025 Combined Total',
+            data: [dirData['618'], dirData['645'], dirData['959']],
+            backgroundColor: [
+              chartColors.blue, 
+              chartColors.green, 
+              chartColors.purple
+            ],
+            borderColor: [
+              chartColors.borderBlue, 
+              chartColors.borderGreen, 
+              chartColors.borderPurple
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  if (context.parsed.y !== null) {
+                    label += '$' + context.parsed.y.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                  }
+                  return label;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: 'Amount ($)'
+              },
+              ticks: {
+                callback: function(value) {
+                  if (value >= 1000) {
+                    return '$' + value/1000 + 'k';
+                  }
+                  return '$' + value;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Create the growth chart showing year-over-year changes
+    function createGrowthChart() {
+      const growthCtx = document.getElementById('growthChart');
+      if (!growthCtx) return;
+      
+      // Calculate growth rates from 2024B to 2025
+      const growthData = [];
+      
+      Object.keys(medicalCodeData).forEach(code => {
+        const data = medicalCodeData[code];
+        
+        // Only include if we have enough historical data
+        if (data.historical && data.historical.length >= 2) {
+          const latestYear = data.historical[data.historical.length - 1];
+          const previousYear = data.historical[data.historical.length - 2];
+          
+          if (latestYear.combined && previousYear.combined) {
+            const growthRate = ((latestYear.combined - previousYear.combined) / previousYear.combined) * 100;
+            
+            growthData.push({
+              code: code,
+              growth: growthRate,
+              isPositive: growthRate >= 0
+            });
+          }
+        }
+      });
+      
+      // Sort by growth rate
+      growthData.sort((a, b) => b.growth - a.growth);
+      
+      // Create chart
+      new Chart(growthCtx, {
+        type: 'bar',
+        data: {
+          labels: growthData.map(item => item.code),
+          datasets: [{
+            label: 'Year-over-Year Growth (%)',
+            data: growthData.map(item => item.growth),
+            backgroundColor: growthData.map(item => item.isPositive ? chartColors.green : chartColors.red),
+            borderColor: growthData.map(item => item.isPositive ? chartColors.borderGreen : chartColors.borderRed),
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  if (context.parsed.x !== null) {
+                    label += context.parsed.x.toFixed(2) + '%';
+                  }
+                  return label;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Percent Change'
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Create the market size chart
+    function createMarketSizeChart() {
+      const marketCtx = document.getElementById('marketSizeChart');
+      if (!marketCtx) return;
+      
+      // Aggregate market size data by directory
+      const marketData = {
+        '618': { total: 0, label: '618 - Neurostimulator Implantation' },
+        '645': { total: 0, label: '645 - Neurological Procedures' },
+        '959': { total: 0, label: '959 - Analysis & Programming' }
+      };
+      
+      // Use sample market size data
+      marketData['618'].total = 40202.98;
+      marketData['645'].total = 64116.09;
+      marketData['959'].total = 23968.33;
+      
+      // Create chart
+      new Chart(marketCtx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.values(marketData).map(item => item.label),
+          datasets: [{
+            label: 'Market Size',
+            data: Object.values(marketData).map(item => item.total),
+            backgroundColor: [chartColors.blue, chartColors.green, chartColors.purple],
+            borderColor: [chartColors.borderBlue, chartColors.borderGreen, chartColors.borderPurple],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: {
+                boxWidth: 12
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let label = context.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = Math.round((context.raw / total) * 100);
+                  label += '$' + context.raw.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' (' + percentage + '%)';
+                  return label;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Create revenue split charts for specific codes
+    function createRevenueSplitChart(codeId, revenueSplit) {
+      const canvas = document.getElementById(`revenueSplit-${codeId}`);
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext('2d');
+      new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Facility', 'Office'],
+          datasets: [{
+            data: [revenueSplit.facility, revenueSplit.office],
+            backgroundColor: [chartColors.blue, chartColors.green],
+            borderColor: [chartColors.borderBlue, chartColors.borderGreen],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let label = context.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = Math.round((context.raw / total) * 100);
+                  label += '$' + context.raw.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' (' + percentage + '%)';
+                  return label;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Create year-over-year change charts for specific codes
+    function createChangeChart(codeId, data) {
+      const canvas = document.getElementById(`changeChart-${codeId}`);
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['2020-2021', '2021-2022', '2022-2023', '2023-2024A', '2024A-2024B', '2024B-2025'],
+          datasets: [
+            {
+              label: 'Reimbursement Change (%)',
+              data: data.reimbursement,
+              backgroundColor: chartColors.blue,
+              borderColor: chartColors.borderBlue,
+              borderWidth: 1
+            },
+            {
+              label: 'Payment Change (%)',
+              data: data.payment,
+              backgroundColor: chartColors.green,
+              borderColor: chartColors.borderGreen,
+              borderWidth: 1
+            },
+            {
+              label: 'Combined Change (%)',
+              data: data.combined,
+              backgroundColor: chartColors.purple,
+              borderColor: chartColors.borderPurple,
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                boxWidth: 12
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  if (context.parsed.y !== null) {
+                    label += context.parsed.y.toFixed(2) + '%';
+                  }
+                  return label;
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              title: {
+                display: true,
+                text: 'Percent Change'
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

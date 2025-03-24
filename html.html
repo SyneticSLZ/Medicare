@@ -1,0 +1,1815 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medicare Data Dashboard</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+  <style>
+    .dark {
+      --tw-bg-opacity: 1;
+      background-color: rgba(17, 24, 39, var(--tw-bg-opacity));
+      color: white;
+    }
+    
+    .chart-container {
+      position: relative;
+      height: 300px;
+      width: 100%;
+    }
+    
+    .collapsed {
+      display: none;
+    }
+    
+    .expanded {
+      display: table-row;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+    .dark ::-webkit-scrollbar-track {
+      background: #374151;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #4B5563;
+    }
+    .dark ::-webkit-scrollbar-thumb:hover {
+      background: #6B7280;
+    }
+    
+    /* Improved Toggle Button */
+    .toggle-details {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.375rem 0.75rem;
+      border-radius: 0.375rem;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+    
+    .toggle-details:hover {
+      background-color: rgba(59, 130, 246, 0.1);
+    }
+    
+    .toggle-details i {
+      margin-right: 0.375rem;
+      transition: transform 0.2s;
+    }
+    
+    .toggle-details.active i {
+      transform: rotate(180deg);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 transition-colors duration-200">
+  
+  <!-- Navbar -->
+  <nav class="bg-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16">
+        <div class="flex items-center">
+          <i class="fas fa-heartbeat text-blue-600 text-2xl mr-2"></i>
+          <span class="font-bold text-xl">Medicare Analytics</span>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button id="darkModeToggle" class="p-2 rounded-full hover:bg-gray-200 focus:outline-none">
+            <i class="fas fa-moon"></i>
+            <i class="fas fa-sun text-yellow-300 hidden"></i>
+          </button>
+          <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+            Export Data
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Dashboard Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Medicare Reimbursement Dashboard</h1>
+      <p class="mt-2 text-gray-600">Comprehensive analysis of reimbursement rates, payments, and market trends across multiple codes and years.</p>
+    </div>
+    
+    <!-- Market Analysis Cards -->
+    <div class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">Market Analysis by Device Type</h2>
+      
+      <!-- Brain Neurostimulation Market -->
+      <div class="bg-white rounded-lg shadow mb-6">
+        <div class="p-4 bg-blue-50 border-l-4 border-blue-500">
+          <h3 class="text-lg font-semibold flex items-center">
+            <i class="fas fa-brain text-blue-600 mr-2"></i>
+            Brain Neurostimulation Market (Directory 618)
+            <span class="ml-auto text-sm font-normal text-red-500">-3.31% from 2024B</span>
+          </h3>
+        </div>
+        
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <!-- Market Size Card -->
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div class="flex items-center">
+                <div class="p-3 rounded-full bg-blue-100 mr-3">
+                  <i class="fas fa-chart-pie text-blue-600"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Market Size</p>
+                  <p class="text-lg font-semibold">$36,057.65</p>
+                  <p class="text-xs text-gray-500">44.8% of total market</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Provider Count Card -->
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100 mr-3">
+                  <i class="fas fa-hospital-user text-green-600"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Provider Count</p>
+                  <p class="text-lg font-semibold">95</p>
+                  <p class="text-xs text-gray-500">Across 36 states</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Utilization Card -->
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div class="flex items-center">
+                <div class="p-3 rounded-full bg-purple-100 mr-3">
+                  <i class="fas fa-procedures text-purple-600"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Total Services</p>
+                  <p class="text-lg font-semibold">1,786</p>
+                  <p class="text-xs text-gray-500">1,728 beneficiaries</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Average Payment Card -->
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div class="flex items-center">
+                <div class="p-3 rounded-full bg-yellow-100 mr-3">
+                  <i class="fas fa-dollar-sign text-yellow-600"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Avg. Payment</p>
+                  <p class="text-lg font-semibold">$573.09</p>
+                  <p class="text-xs text-gray-500">$3,489.46 submitted charge</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-6">
+            <div class="chart-container">
+              <canvas id="brain-market-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Cranial Nerve Stimulation Market -->
+      <div class="bg-white rounded-lg shadow mb-6">
+        <div class="p-4 bg-green-50 border-l-4 border-green-500">
+          <h3 class="text-lg font-semibold flex items-center">
+            <i class="fas fa-heartbeat text-green-600 mr-2"></i>
+            Cranial Nerve Stimulation Market (Directory 645)
+            <span class="ml-auto text-sm font-normal text-green-500">+1.46% from 2024B</span>
+          </h3>
+        </div>
+        
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <!-- Market Size Card -->
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100 mr-3">
+                  <i class="fas fa-chart-pie text-green-600"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Market Size</p>
+                  <p class="text-lg font-semibold">$44,303.10</p>
+                  <p class="text-xs text-gray-500">55% of total market</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Provider Count Card -->
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100 mr-3">
+                  <i class="fas fa-hospital-user text-green-600"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Provider Count</p>
+                  <p class="text-lg font-semibold">142</p>
+                  <p class="text-xs text-gray-500">Across 42 states</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Utilization Card -->
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100 mr-3">
+                  <i class="fas fa-procedures text-green-600"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Total Services</p>
+                  <p class="text-lg font-semibold">2,453</p>
+                  <p class="text-xs text-gray-500">2,104 beneficiaries</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Average Payment Card -->
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div class="flex items-center">
+                <div class="p-3 rounded-full bg-green-100 mr-3">
+                  <i class="fas fa-dollar-sign text-green-600"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Avg. Payment</p>
+                  <p class="text-lg font-semibold">$679.60</p>
+                  <p class="text-xs text-gray-500">$4,156.28 submitted charge</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-6">
+            <div class="chart-container">
+              <canvas id="cranial-market-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Neurostimulator Programming Market -->
+      <div class="bg-white rounded-lg shadow mb-6">
+        <div class="p-4 bg-purple-50 border-l-4 border-purple-500">
+          <h3 class="text-lg font-semibold flex items-center">
+            <i class="fas fa-code text-purple-600 mr-2"></i>
+            Neurostimulator Programming Market (Directory 959)
+            <span class="ml-auto text-sm font-normal text-green-500">+0.36% from 2024B</span>
+          </h3>
+        </div>
+        
+        <div class="p-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+            <!-- Market Size Card -->
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div class="flex items-center">
+                <div class="p-3 rounded-full bg-purple-100 mr-3">
+                  <i class="fas fa-chart-pie text-purple-600"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Market Size</p>
+                  <p class="text-lg font-semibold">$219.88</p>
+                  <p class="text-xs text-gray-500">0.2% of total market</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Provider Count Card -->
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div class="flex items-center">
+                <div class="p-3 rounded-full bg-purple-100 mr-3">
+                  <i class="fas fa-hospital-user text-purple-600"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Provider Count</p>
+                  <p class="text-lg font-semibold">495</p>
+                  <p class="text-xs text-gray-500">Highest provider count</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Utilization Card -->
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div class="flex items-center">
+                <div class="p-3 rounded-full bg-purple-100 mr-3">
+                  <i class="fas fa-procedures text-purple-600"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Total Services</p>
+                  <p class="text-lg font-semibold">14,769</p>
+                  <p class="text-xs text-gray-500">10,325 beneficiaries</p>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Average Payment Card -->
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div class="flex items-center">
+                <div class="p-3 rounded-full bg-purple-100 mr-3">
+                  <i class="fas fa-dollar-sign text-purple-600"></i>
+                </div>
+                <div>
+                  <p class="text-xs font-medium text-gray-500">Avg. Payment</p>
+                  <p class="text-lg font-semibold">$12.96</p>
+                  <p class="text-xs text-gray-500">$158.64 submitted charge</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mt-6">
+            <div class="chart-container">
+              <canvas id="programming-market-chart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Trend Chart -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+      <h2 class="text-xl font-semibold mb-4">Reimbursement Trends (All Codes)</h2>
+      <div class="chart-container">
+        <canvas id="trendChart"></canvas>
+      </div>
+    </div>
+    
+    <!-- Code Categories Section -->
+    <div class="mb-8">
+      <h2 class="text-2xl font-bold mb-4">Code Categories</h2>
+      
+      <!-- Directory 618 Section -->
+      <div class="mb-6 bg-white rounded-lg shadow overflow-hidden">
+        <div class="p-4 bg-blue-50 border-l-4 border-blue-500">
+          <h3 class="text-lg font-semibold">Directory 618 - Neurostimulator Implantation</h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reimbursement</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Combined</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">% Change</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <!-- 61885 -->
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">61885</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">Insertion of brain neurostimulator pulse device</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$527.57</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$21,444.39</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$21,971.96</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">-2.17%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <button class="toggle-details text-blue-600 hover:text-blue-800" data-code="61885">
+                    <i class="fas fa-chevron-down"></i> Details
+                  </button>
+                </td>
+              </tr>
+              <!-- 61885 Details -->
+              <tr class="details-row bg-gray-50 collapsed" id="details-61885">
+                <td colspan="7" class="px-6 py-4">
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <h4 class="font-semibold mb-2">Historical Data</h4>
+                      <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                          <thead class="bg-gray-100">
+                            <tr>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Year</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Reimbursement</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Payment</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Combined</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-gray-200">
+                            <tr><td class="px-3 py-2 text-xs">2020</td><td class="px-3 py-2 text-xs">$538.82</td><td class="px-3 py-2 text-xs">$19,279.42</td><td class="px-3 py-2 text-xs">$19,818.24</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2021</td><td class="px-3 py-2 text-xs">$540.49</td><td class="px-3 py-2 text-xs">$20,479.78</td><td class="px-3 py-2 text-xs">$21,020.27</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2022</td><td class="px-3 py-2 text-xs">$542.63</td><td class="px-3 py-2 text-xs">$20,912.55</td><td class="px-3 py-2 text-xs">$21,455.18</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2023</td><td class="px-3 py-2 text-xs">$541.86</td><td class="px-3 py-2 text-xs">$21,515.36</td><td class="px-3 py-2 text-xs">$22,057.22</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024A</td><td class="px-3 py-2 text-xs">$530.46</td><td class="px-3 py-2 text-xs">$20,842.84</td><td class="px-3 py-2 text-xs">$21,373.30</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024B</td><td class="px-3 py-2 text-xs">$539.26</td><td class="px-3 py-2 text-xs">$20,842.84</td><td class="px-3 py-2 text-xs">$21,382.10</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2025</td><td class="px-3 py-2 text-xs">$527.57</td><td class="px-3 py-2 text-xs">$21,444.39</td><td class="px-3 py-2 text-xs">$21,971.96</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold mb-2">Market Information</h4>
+                      <div class="space-y-2">
+                        <p class="text-sm"><span class="font-medium">Total Services:</span> 1,786</p>
+                        <p class="text-sm"><span class="font-medium">Total Beneficiaries:</span> 1,728</p>
+                        <p class="text-sm"><span class="font-medium">Total Spending:</span> $1,073,109.88</p>
+                        <p class="text-sm"><span class="font-medium">Provider Count:</span> 95</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Submitted Charge:</span> $3,489.46</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Medicare Payment:</span> $573.09</p>
+                      </div>
+                      
+                      <div class="mt-4">
+                        <h4 class="font-semibold mb-2">Revenue Splits</h4>
+                        <div class="chart-container" style="height: 200px;">
+                          <canvas id="revenueSplit-61885"></canvas>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-4">
+                    <h4 class="font-semibold mb-2">Year-over-Year Percent Change</h4>
+                    <div class="chart-container">
+                      <canvas id="changeChart-61885"></canvas>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- 61888 -->
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">61888</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">Removal of brain neurostimulator device</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$394.95</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$12,470.31</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$12,865.26</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">-2.51%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <button class="toggle-details text-blue-600 hover:text-blue-800" data-code="61888">
+                    <i class="fas fa-chevron-down"></i> Details
+                  </button>
+                </td>
+              </tr>
+              <!-- 61888 Details -->
+              <tr class="details-row bg-gray-50 collapsed" id="details-61888">
+                <td colspan="7" class="px-6 py-4">
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <h4 class="font-semibold mb-2">Historical Data</h4>
+                      <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                          <thead class="bg-gray-100">
+                            <tr>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Year</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Reimbursement</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Payment</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Combined</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-gray-200">
+                            <tr><td class="px-3 py-2 text-xs">2020</td><td class="px-3 py-2 text-xs">$411.06</td><td class="px-3 py-2 text-xs">$6,187.13</td><td class="px-3 py-2 text-xs">$6,598.19</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2021</td><td class="px-3 py-2 text-xs">$409.99</td><td class="px-3 py-2 text-xs">$11,236.21</td><td class="px-3 py-2 text-xs">$11,646.20</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2022</td><td class="px-3 py-2 text-xs">$411.81</td><td class="px-3 py-2 text-xs">$11,483.38</td><td class="px-3 py-2 text-xs">$11,895.19</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2023</td><td class="px-3 py-2 text-xs">$409.02</td><td class="px-3 py-2 text-xs">$11,952.59</td><td class="px-3 py-2 text-xs">$12,361.61</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024A</td><td class="px-3 py-2 text-xs">$398.50</td><td class="px-3 py-2 text-xs">$12,978.95</td><td class="px-3 py-2 text-xs">$13,377.45</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024B</td><td class="px-3 py-2 text-xs">$405.11</td><td class="px-3 py-2 text-xs">$12,978.95</td><td class="px-3 py-2 text-xs">$13,384.06</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2025</td><td class="px-3 py-2 text-xs">$394.95</td><td class="px-3 py-2 text-xs">$12,470.31</td><td class="px-3 py-2 text-xs">$12,865.26</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold mb-2">Market Information</h4>
+                      <div class="space-y-2">
+                        <p class="text-sm"><span class="font-medium">Total Services:</span> 52</p>
+                        <p class="text-sm"><span class="font-medium">Total Beneficiaries:</span> 51</p>
+                        <p class="text-sm"><span class="font-medium">Total Spending:</span> $13,887.22</p>
+                        <p class="text-sm"><span class="font-medium">Provider Count:</span> 4</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Submitted Charge:</span> $1,410.88</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Medicare Payment:</span> $262.96</p>
+                      </div>
+                      
+                      <div class="mt-4">
+                        <h4 class="font-semibold mb-2">Revenue Splits</h4>
+                        <div class="chart-container" style="height: 200px;">
+                          <canvas id="revenueSplit-61888"></canvas>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-4">
+                    <h4 class="font-semibold mb-2">Year-over-Year Percent Change</h4>
+                    <div class="chart-container">
+                      <canvas id="changeChart-61888"></canvas>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- 61889 -->
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">61889</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">Related neurostimulator analysis/programming</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$1,220.43</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">N/A</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$1,220.43</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">-3.31%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <button class="toggle-details text-blue-600 hover:text-blue-800" data-code="61889">
+                    <i class="fas fa-chevron-down"></i> Details
+                  </button>
+                </td>
+              </tr>
+              <!-- 61889 Details -->
+              <tr class="details-row bg-gray-50 collapsed" id="details-61889">
+                <td colspan="7" class="px-6 py-4">
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <h4 class="font-semibold mb-2">Historical Data</h4>
+                      <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                          <thead class="bg-gray-100">
+                            <tr>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Year</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Reimbursement</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Payment</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Combined</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-gray-200">
+                            <tr><td class="px-3 py-2 text-xs">2024A</td><td class="px-3 py-2 text-xs">$1,262.24</td><td class="px-3 py-2 text-xs">N/A</td><td class="px-3 py-2 text-xs">$1,262.24</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024B</td><td class="px-3 py-2 text-xs">$1,262.24</td><td class="px-3 py-2 text-xs">N/A</td><td class="px-3 py-2 text-xs">$1,262.24</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2025</td><td class="px-3 py-2 text-xs">$1,220.43</td><td class="px-3 py-2 text-xs">N/A</td><td class="px-3 py-2 text-xs">$1,220.43</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <p class="text-sm mt-2 text-gray-500 italic">Note: This is a new code introduced in 2024A.</p>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold mb-2">Market Information</h4>
+                      <div class="space-y-2">
+                        <p class="text-sm"><span class="font-medium">Total Services:</span> 788</p>
+                        <p class="text-sm"><span class="font-medium">Total Beneficiaries:</span> 754</p>
+                        <p class="text-sm"><span class="font-medium">Total Spending:</span> $961,698.72</p>
+                        <p class="text-sm"><span class="font-medium">Provider Count:</span> 64</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Submitted Charge:</span> $1,546.32</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Medicare Payment:</span> N/A</p>
+                      </div>
+                      
+                      <div class="mt-4">
+                        <h4 class="font-semibold mb-2">Market Adoption</h4>
+                        <p class="text-sm text-gray-600">This code was recently introduced and is in the early stages of adoption. No device payment data is available yet as it's primarily a professional service code.</p>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Directory 645 Section -->
+      <div class="mb-6 bg-white rounded-lg shadow overflow-hidden">
+        <div class="p-4 bg-green-50 border-l-4 border-green-500">
+          <h3 class="text-lg font-semibold">Directory 645 - Neurological Procedures</h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reimbursement</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Combined</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">% Change</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <!-- 64568 -->
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">64568</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">Cranial nerve neurostimulator implantation</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$593.56</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$30,473.59</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$31,067.15</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-500">+2.89%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <button class="toggle-details text-blue-600 hover:text-blue-800" data-code="64568">
+                    <i class="fas fa-chevron-down"></i> Details
+                  </button>
+                </td>
+              </tr>
+              <!-- 64568 Details -->
+              <tr class="details-row bg-gray-50 collapsed" id="details-64568">
+                <td colspan="7" class="px-6 py-4">
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <h4 class="font-semibold mb-2">Historical Data</h4>
+                      <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                          <thead class="bg-gray-100">
+                            <tr>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Year</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Reimbursement</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Payment</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Combined</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-gray-200">
+                            <tr><td class="px-3 py-2 text-xs">2020</td><td class="px-3 py-2 text-xs">$651.78</td><td class="px-3 py-2 text-xs">$29,118.74</td><td class="px-3 py-2 text-xs">$29,770.52</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2021</td><td class="px-3 py-2 text-xs">$635.05</td><td class="px-3 py-2 text-xs">$29,444.52</td><td class="px-3 py-2 text-xs">$30,079.57</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2022</td><td class="px-3 py-2 text-xs">$627.76</td><td class="px-3 py-2 text-xs">$30,063.48</td><td class="px-3 py-2 text-xs">$30,691.24</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2023</td><td class="px-3 py-2 text-xs">$609.97</td><td class="px-3 py-2 text-xs">$29,358.48</td><td class="px-3 py-2 text-xs">$29,968.45</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024A</td><td class="px-3 py-2 text-xs">$596.93</td><td class="px-3 py-2 text-xs">$29,586.29</td><td class="px-3 py-2 text-xs">$30,183.22</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024B</td><td class="px-3 py-2 text-xs">$606.83</td><td class="px-3 py-2 text-xs">$29,586.29</td><td class="px-3 py-2 text-xs">$30,193.12</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2025</td><td class="px-3 py-2 text-xs">$593.56</td><td class="px-3 py-2 text-xs">$30,473.59</td><td class="px-3 py-2 text-xs">$31,067.15</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold mb-2">Market Information</h4>
+                      <div class="space-y-2">
+                        <p class="text-sm"><span class="font-medium">Total Services:</span> 1,286</p>
+                        <p class="text-sm"><span class="font-medium">Total Beneficiaries:</span> 1,243</p>
+                        <p class="text-sm"><span class="font-medium">Total Spending:</span> $38,616,307.45</p>
+                        <p class="text-sm"><span class="font-medium">Provider Count:</span> 87</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Submitted Charge:</span> $35,472.63</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Medicare Payment:</span> $30,024.36</p>
+                      </div>
+                      
+                      <div class="mt-4">
+                        <h4 class="font-semibold mb-2">Year-over-Year Percent Change</h4>
+                        <div class="chart-container" style="height: 200px;">
+                          <canvas id="changeChart-64568"></canvas>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- 64569 -->
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">64569</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">Revision/replacement of cranial neurostimulator</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$765.64</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$12,470.31</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$13,235.95</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-500">+1.46%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <button class="toggle-details text-blue-600 hover:text-blue-800" data-code="64569">
+                    <i class="fas fa-chevron-down"></i> Details
+                  </button>
+                </td>
+              </tr>
+              <!-- 64569 Details -->
+              <tr class="details-row bg-gray-50 collapsed" id="details-64569">
+                <td colspan="7" class="px-6 py-4">
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <h4 class="font-semibold mb-2">Historical Data</h4>
+                      <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                          <thead class="bg-gray-100">
+                            <tr>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Year</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Reimbursement</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Payment</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Combined</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-gray-200">
+                            <tr><td class="px-3 py-2 text-xs">2020</td><td class="px-3 py-2 text-xs">$789.46</td><td class="px-3 py-2 text-xs">$10,284.32</td><td class="px-3 py-2 text-xs">$11,073.78</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2021</td><td class="px-3 py-2 text-xs">$785.12</td><td class="px-3 py-2 text-xs">$11,546.37</td><td class="px-3 py-2 text-xs">$12,331.49</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2022</td><td class="px-3 py-2 text-xs">$781.47</td><td class="px-3 py-2 text-xs">$11,821.24</td><td class="px-3 py-2 text-xs">$12,602.71</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2023</td><td class="px-3 py-2 text-xs">$770.26</td><td class="px-3 py-2 text-xs">$11,963.57</td><td class="px-3 py-2 text-xs">$12,733.83</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024A</td><td class="px-3 py-2 text-xs">$765.31</td><td class="px-3 py-2 text-xs">$12,263.43</td><td class="px-3 py-2 text-xs">$13,028.74</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024B</td><td class="px-3 py-2 text-xs">$781.58</td><td class="px-3 py-2 text-xs">$12,263.43</td><td class="px-3 py-2 text-xs">$13,045.01</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2025</td><td class="px-3 py-2 text-xs">$765.64</td><td class="px-3 py-2 text-xs">$12,470.31</td><td class="px-3 py-2 text-xs">$13,235.95</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold mb-2">Market Information</h4>
+                      <div class="space-y-2">
+                        <p class="text-sm"><span class="font-medium">Total Services:</span> 1,167</p>
+                        <p class="text-sm"><span class="font-medium">Total Beneficiaries:</span> 861</p>
+                        <p class="text-sm"><span class="font-medium">Total Spending:</span> $15,446,252.65</p>
+                        <p class="text-sm"><span class="font-medium">Provider Count:</span> 92</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Submitted Charge:</span> $15,682.41</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Medicare Payment:</span> $13,256.43</p>
+                      </div>
+                      
+                      <div class="mt-4">
+                        <h4 class="font-semibold mb-2">Year-over-Year Percent Change</h4>
+                        <div class="chart-container" style="height: 200px;">
+                          <canvas id="changeChart-64569"></canvas>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Directory 959 Section -->
+      <div class="mb-6 bg-white rounded-lg shadow overflow-hidden">
+        <div class="p-4 bg-purple-50 border-l-4 border-purple-500">
+          <h3 class="text-lg font-semibold">Directory 959 - Neurostimulator Analysis & Programming</h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reimbursement</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Combined</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">% Change</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              <!-- 95970 -->
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">95970</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">Electronic analysis of neurostimulator</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$17.79</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$128.90</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$146.69</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-500">+5.01%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <button class="toggle-details text-blue-600 hover:text-blue-800" data-code="95970">
+                    <i class="fas fa-chevron-down"></i> Details
+                  </button>
+                </td>
+              </tr>
+              <!-- 95970 Details -->
+              <tr class="details-row bg-gray-50 collapsed" id="details-95970">
+                <td colspan="7" class="px-6 py-4">
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <h4 class="font-semibold mb-2">Historical Data</h4>
+                      <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                          <thead class="bg-gray-100">
+                            <tr>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Year</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Reimbursement</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Payment</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Combined</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-gray-200">
+                            <tr><td class="px-3 py-2 text-xs">2020</td><td class="px-3 py-2 text-xs">$19.49</td><td class="px-3 py-2 text-xs">$109.03</td><td class="px-3 py-2 text-xs">$128.52</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2021</td><td class="px-3 py-2 text-xs">$19.19</td><td class="px-3 py-2 text-xs">$111.95</td><td class="px-3 py-2 text-xs">$131.14</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2022</td><td class="px-3 py-2 text-xs">$19.03</td><td class="px-3 py-2 text-xs">$115.16</td><td class="px-3 py-2 text-xs">$134.19</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2023</td><td class="px-3 py-2 text-xs">$18.64</td><td class="px-3 py-2 text-xs">$116.11</td><td class="px-3 py-2 text-xs">$134.75</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024A</td><td class="px-3 py-2 text-xs">$17.68</td><td class="px-3 py-2 text-xs">$121.71</td><td class="px-3 py-2 text-xs">$139.39</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024B</td><td class="px-3 py-2 text-xs">$17.98</td><td class="px-3 py-2 text-xs">$121.71</td><td class="px-3 py-2 text-xs">$139.69</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2025</td><td class="px-3 py-2 text-xs">$17.79</td><td class="px-3 py-2 text-xs">$128.90</td><td class="px-3 py-2 text-xs">$146.69</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold mb-2">Market Information</h4>
+                      <div class="space-y-2">
+                        <p class="text-sm"><span class="font-medium">Total Services:</span> 14,769</p>
+                        <p class="text-sm"><span class="font-medium">Total Beneficiaries:</span> 10,325</p>
+                        <p class="text-sm"><span class="font-medium">Total Spending:</span> $191,802.80</p>
+                        <p class="text-sm"><span class="font-medium">Provider Count:</span> 495</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Submitted Charge:</span> $158.64</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Medicare Payment:</span> $12.96</p>
+                      </div>
+                      
+                      <div class="mt-4">
+                        <h4 class="font-semibold mb-2">Revenue Splits</h4>
+                        <div class="chart-container" style="height: 200px;">
+                          <canvas id="revenueSplit-95970"></canvas>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-4">
+                    <h4 class="font-semibold mb-2">Year-over-Year Percent Change</h4>
+                    <div class="chart-container">
+                      <canvas id="changeChart-95970"></canvas>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- 95976 -->
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">95976</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">Simple cranial nerve programming</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$35.90</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$37.29</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">$73.19</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-500">-1.37%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                  <button class="toggle-details text-blue-600 hover:text-blue-800" data-code="95976">
+                    <i class="fas fa-chevron-down"></i> Details
+                  </button>
+                </td>
+              </tr>
+              <!-- 95976 Details -->
+              <tr class="details-row bg-gray-50 collapsed" id="details-95976">
+                <td colspan="7" class="px-6 py-4">
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div>
+                      <h4 class="font-semibold mb-2">Historical Data</h4>
+                      <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                          <thead class="bg-gray-100">
+                            <tr>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Year</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Reimbursement</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Payment</th>
+                              <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Combined</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-gray-200">
+                            <tr><td class="px-3 py-2 text-xs">2020</td><td class="px-3 py-2 text-xs">$36.72</td><td class="px-3 py-2 text-xs">$32.54</td><td class="px-3 py-2 text-xs">$69.26</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2021</td><td class="px-3 py-2 text-xs">$36.58</td><td class="px-3 py-2 text-xs">$33.12</td><td class="px-3 py-2 text-xs">$69.70</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2022</td><td class="px-3 py-2 text-xs">$36.29</td><td class="px-3 py-2 text-xs">$34.67</td><td class="px-3 py-2 text-xs">$70.96</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2023</td><td class="px-3 py-2 text-xs">$36.13</td><td class="px-3 py-2 text-xs">$35.42</td><td class="px-3 py-2 text-xs">$71.55</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024A</td><td class="px-3 py-2 text-xs">$35.47</td><td class="px-3 py-2 text-xs">$36.54</td><td class="px-3 py-2 text-xs">$72.01</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2024B</td><td class="px-3 py-2 text-xs">$36.39</td><td class="px-3 py-2 text-xs">$36.54</td><td class="px-3 py-2 text-xs">$72.93</td></tr>
+                            <tr><td class="px-3 py-2 text-xs">2025</td><td class="px-3 py-2 text-xs">$35.90</td><td class="px-3 py-2 text-xs">$37.29</td><td class="px-3 py-2 text-xs">$73.19</td></tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold mb-2">Market Information</h4>
+                      <div class="space-y-2">
+                        <p class="text-sm"><span class="font-medium">Total Services:</span> 2,345</p>
+                        <p class="text-sm"><span class="font-medium">Total Beneficiaries:</span> 1,846</p>
+                        <p class="text-sm"><span class="font-medium">Total Spending:</span> $171,630.55</p>
+                        <p class="text-sm"><span class="font-medium">Provider Count:</span> 204</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Submitted Charge:</span> $92.37</p>
+                        <p class="text-sm"><span class="font-medium">Avg. Medicare Payment:</span> $73.19</p>
+                      </div>
+                      
+                      <div class="mt-4">
+                        <h4 class="font-semibold mb-2">Year-over-Year Percent Change</h4>
+                        <div class="chart-container" style="height: 200px;">
+                          <canvas id="changeChart-95976"></canvas>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Market Analysis Summary -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+      <h2 class="text-2xl font-bold mb-4">Market Analysis Summary</h2>
+      
+      <div class="prose max-w-none">
+        <p class="mb-4">This Medicare reimbursement dashboard provides a comprehensive analysis of the neurostimulation device market, showing several important trends:</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <h3 class="text-lg font-semibold text-blue-800 mb-2">Brain Neurostimulation (618)</h3>
+            <p class="text-sm">The brain neurostimulation market has seen a slight decline (-3.31%) from 2024, but remains a substantial portion of the total market at 44.8%. Device reimbursements are trending downward while procedural payments remain relatively stable, suggesting pressure on professional services.</p>
+          </div>
+          
+          <div class="bg-green-50 p-4 rounded-lg">
+            <h3 class="text-lg font-semibold text-green-800 mb-2">Cranial Nerve Stimulation (645)</h3>
+            <p class="text-sm">This represents the largest market segment (55%) and is showing positive growth (+1.46%). The high device payment component ($30,473.59) for code 64568 drives most of this market's value, with strong provider adoption across 42 states.</p>
+          </div>
+          
+          <div class="bg-purple-50 p-4 rounded-lg">
+            <h3 class="text-lg font-semibold text-purple-800 mb-2">Programming Services (959)</h3>
+            <p class="text-sm">While the smallest market segment by dollar value (0.2%), this area shows the strongest growth (+5.01% for code 95970) and the highest utilization (14,769 services). With 495 providers, this represents a widely distributed service with low barriers to entry.</p>
+          </div>
+          
+          <div class="bg-yellow-50 p-4 rounded-lg">
+            <h3 class="text-lg font-semibold text-yellow-800 mb-2">Overall Market Trends</h3>
+            <p class="text-sm">Device payments continue to dominate the market value (95.4% of total market), while reimbursement rates face continued downward pressure. The emergence of new codes (e.g., 61889) suggests evolution in the market with potential new revenue streams developing.</p>
+          </div>
+        </div>
+        
+        <h3 class="text-xl font-semibold mt-6 mb-2">Strategic Implications</h3>
+        <ul class="list-disc pl-6 space-y-2">
+          <li><span class="font-medium">Device Manufacturers:</span> Focus on cranial nerve stimulation devices, which show the strongest market growth and highest reimbursement rates.</li>
+          <li><span class="font-medium">Healthcare Providers:</span> Increase programming service offerings (959 directory), which show the highest percentage growth and require lower capital investment.</li>
+          <li><span class="font-medium">Financial Planning:</span> Budget for an average 2.1% decrease in reimbursement rates but offset with increased procedure volumes in growing areas.</li>
+          <li><span class="font-medium">Contract Negotiations:</span> Device payments represent over 95% of market value - focus negotiations on device components rather than professional services.</li>
+          <li><span class="font-medium">Market Expansion:</span> The programming market (959) has the widest provider distribution, suggesting lower barriers to entry and expansion opportunities.</li>
+        </ul>
+        
+        <p class="mt-4 text-sm italic">Note: This analysis is based on Medicare data only and may not reflect trends in commercial insurance or self-pay markets.</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Footer -->
+  <footer class="bg-white shadow-md mt-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <p class="text-sm text-gray-500">Medicare Data Dashboard</p>
+          <p class="text-xs text-gray-400">Last updated: March 23, 2025</p>
+        </div>
+        <div class="flex space-x-4">
+          <button class="text-sm text-blue-600 hover:text-blue-800">
+            Export to PDF
+          </button>
+          <button class="text-sm text-blue-600 hover:text-blue-800">
+            Export to CSV
+          </button>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+
+<script>
+                                // Toggle dark mode functionality
+                                document.getElementById('darkModeToggle').addEventListener('click', function() {
+                                  const html = document.documentElement;
+                                  const moonIcon = this.querySelector('.fa-moon');
+                                  const sunIcon = this.querySelector('.fa-sun');
+                                  
+                                  html.classList.toggle('dark');
+                                  
+                                  // Toggle icon visibility
+                                  moonIcon.classList.toggle('hidden');
+                                  sunIcon.classList.toggle('hidden');
+                                  
+                                  // Update body and other elements with dark mode classes
+                                  if (html.classList.contains('dark')) {
+                                    // Apply dark mode classes
+                                    document.body.classList.add('bg-gray-900', 'text-gray-100');
+                                    
+                                    document.querySelectorAll('.bg-white').forEach(el => {
+                                      el.classList.add('bg-gray-800');
+                                    });
+                                    
+                                    document.querySelectorAll('.bg-gray-50').forEach(el => {
+                                      el.classList.add('bg-gray-700');
+                                    });
+                                    
+                                    document.querySelectorAll('.text-gray-900').forEach(el => {
+                                      el.classList.add('text-white');
+                                    });
+                                    
+                                    document.querySelectorAll('.text-gray-500, .text-gray-600').forEach(el => {
+                                      el.classList.add('text-gray-400');
+                                    });
+                                    
+                                    document.querySelectorAll('.bg-blue-50').forEach(el => {
+                                      el.classList.add('bg-blue-900', 'bg-opacity-20');
+                                    });
+                                    
+                                    document.querySelectorAll('.bg-green-50').forEach(el => {
+                                      el.classList.add('bg-green-900', 'bg-opacity-20');
+                                    });
+                                    
+                                    document.querySelectorAll('.bg-purple-50').forEach(el => {
+                                      el.classList.add('bg-purple-900', 'bg-opacity-20');
+                                    });
+                                    
+                                    document.querySelectorAll('.border-gray-200').forEach(el => {
+                                      el.classList.add('border-gray-700');
+                                    });
+                                  } else {
+                                    // Remove dark mode classes
+                                    document.body.classList.remove('bg-gray-900', 'text-gray-100');
+                                    
+                                    document.querySelectorAll('.bg-white').forEach(el => {
+                                      el.classList.remove('bg-gray-800');
+                                    });
+                                    
+                                    document.querySelectorAll('.bg-gray-50').forEach(el => {
+                                      el.classList.remove('bg-gray-700');
+                                    });
+                                    
+                                    document.querySelectorAll('.text-gray-900').forEach(el => {
+                                      el.classList.remove('text-white');
+                                    });
+                                    
+                                    document.querySelectorAll('.text-gray-500, .text-gray-600').forEach(el => {
+                                      el.classList.remove('text-gray-400');
+                                    });
+                                    
+                                    document.querySelectorAll('.bg-blue-50').forEach(el => {
+                                      el.classList.remove('bg-blue-900', 'bg-opacity-20');
+                                    });
+                                    
+                                    document.querySelectorAll('.bg-green-50').forEach(el => {
+                                      el.classList.remove('bg-green-900', 'bg-opacity-20');
+                                    });
+                                    
+                                    document.querySelectorAll('.bg-purple-50').forEach(el => {
+                                      el.classList.remove('bg-purple-900', 'bg-opacity-20');
+                                    });
+                                    
+                                    document.querySelectorAll('.border-gray-200').forEach(el => {
+                                      el.classList.remove('border-gray-700');
+                                    });
+                                  }
+                                  
+                                  // Save preference
+                                  localStorage.setItem('darkMode', html.classList.contains('dark'));
+                                  
+                                  // Redraw all charts with appropriate colors
+                                  updateChartColors();
+                                });
+                                
+                                // Check for saved dark mode preference
+                                if (localStorage.getItem('darkMode') === 'true' || 
+                                    (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches && 
+                                     localStorage.getItem('darkMode') !== 'false')) {
+                                  document.documentElement.classList.add('dark');
+                                  document.body.classList.add('bg-gray-900', 'text-gray-100');
+                                  
+                                  // Swap icons
+                                  const moonIcon = document.querySelector('.fa-moon');
+                                  const sunIcon = document.querySelector('.fa-sun');
+                                  moonIcon.classList.add('hidden');
+                                  sunIcon.classList.remove('hidden');
+                                  
+                                  // Apply dark mode classes
+                                  document.querySelectorAll('.bg-white').forEach(el => {
+                                    el.classList.add('bg-gray-800');
+                                  });
+                                  
+                                  document.querySelectorAll('.bg-gray-50').forEach(el => {
+                                    el.classList.add('bg-gray-700');
+                                  });
+                                  
+                                  document.querySelectorAll('.text-gray-900').forEach(el => {
+                                    el.classList.add('text-white');
+                                  });
+                                  
+                                  document.querySelectorAll('.text-gray-500, .text-gray-600').forEach(el => {
+                                    el.classList.add('text-gray-400');
+                                  });
+                                  
+                                  document.querySelectorAll('.bg-blue-50').forEach(el => {
+                                    el.classList.add('bg-blue-900', 'bg-opacity-20');
+                                  });
+                                  
+                                  document.querySelectorAll('.bg-green-50').forEach(el => {
+                                    el.classList.add('bg-green-900', 'bg-opacity-20');
+                                  });
+                                  
+                                  document.querySelectorAll('.bg-purple-50').forEach(el => {
+                                    el.classList.add('bg-purple-900', 'bg-opacity-20');
+                                  });
+                                  
+                                  document.querySelectorAll('.border-gray-200').forEach(el => {
+                                    el.classList.add('border-gray-700');
+                                  });
+                                }
+                                
+                                // Toggle details sections - improved with animation
+                                document.querySelectorAll('.toggle-details').forEach(button => {
+                                  button.addEventListener('click', function() {
+                                    const codeId = this.getAttribute('data-code');
+                                    const detailsRow = document.getElementById(`details-${codeId}`);
+                                    
+                                    if (detailsRow.classList.contains('collapsed')) {
+                                      detailsRow.classList.remove('collapsed');
+                                      detailsRow.classList.add('expanded');
+                                      this.innerHTML = '<i class="fas fa-chevron-up"></i> Hide Details';
+                                      this.classList.add('active');
+                                    } else {
+                                      detailsRow.classList.remove('expanded');
+                                      detailsRow.classList.add('collapsed');
+                                      this.innerHTML = '<i class="fas fa-chevron-down"></i> Details';
+                                      this.classList.remove('active');
+                                    }
+                                  });
+                                });
+                            
+                                // Data structure for all codes with their market data
+                                const marketData = {
+                                  // Brain Neurostimulation Market (Directory 618)
+                                  'brain': {
+                                    name: 'Brain Neurostimulation Market',
+                                    directory: '618',
+                                    marketSize: 36057.65,
+                                    providerCount: 95,
+                                    totalServices: 1786,
+                                    beneficiaries: 1728,
+                                    avgPayment: 573.09,
+                                    avgCharge: 3489.46,
+                                    totalSpending: 1073109.88,
+                                    yearOverYearChange: -3.31,
+                                    codeBreakdown: {
+                                      '61885': { combined: 21971.96, change: -2.17, usage: 946 },
+                                      '61888': { combined: 12865.26, change: -2.51, usage: 52 },
+                                      '61889': { combined: 1220.43, change: -3.31, usage: 788 }
+                                    },
+                                    historicalTrend: [
+                                      { year: '2020', value: 28500.43 },
+                                      { year: '2021', value: 32666.47 },
+                                      { year: '2022', value: 33350.37 },
+                                      { year: '2023', value: 34418.83 },
+                                      { year: '2024A', value: 34750.75 },
+                                      { year: '2024B', value: 36060.34 },
+                                      { year: '2025', value: 36057.65 }
+                                    ]
+                                  },
+                                  
+                                  // Cranial Nerve Stimulation Market (Directory 645)
+                                  'cranial': {
+                                    name: 'Cranial Nerve Stimulation Market',
+                                    directory: '645',
+                                    marketSize: 44303.10,
+                                    providerCount: 142,
+                                    totalServices: 2453,
+                                    beneficiaries: 2104,
+                                    avgPayment: 679.60,
+                                    avgCharge: 4156.28,
+                                    totalSpending: 1667526.48,
+                                    yearOverYearChange: 1.46,
+                                    codeBreakdown: {
+                                      '64568': { combined: 31067.15, change: 2.89, usage: 1286 },
+                                      '64569': { combined: 13235.95, change: 1.46, usage: 1167 }
+                                    },
+                                    historicalTrend: [
+                                      { year: '2020', value: 40844.30 },
+                                      { year: '2021', value: 42411.06 },
+                                      { year: '2022', value: 43293.95 },
+                                      { year: '2023', value: 42702.28 },
+                                      { year: '2024A', value: 43211.96 },
+                                      { year: '2024B', value: 43665.13 },
+                                      { year: '2025', value: 44303.10 }
+                                    ]
+                                  },
+                                  
+                                  // Neurostimulator Programming Market (Directory 959)
+                                  'programming': {
+                                    name: 'Neurostimulator Programming Market',
+                                    directory: '959',
+                                    marketSize: 219.88,
+                                    providerCount: 495,
+                                    totalServices: 14769,
+                                    beneficiaries: 10325,
+                                    avgPayment: 12.96,
+                                    avgCharge: 158.64,
+                                    totalSpending: 191802.80,
+                                    yearOverYearChange: 0.36,
+                                    codeBreakdown: {
+                                      '95970': { combined: 146.69, change: 5.01, usage: 14769 },
+                                      '95976': { combined: 73.19, change: 0.36, usage: 2345 }
+                                    },
+                                    historicalTrend: [
+                                      { year: '2020', value: 197.78 },
+                                      { year: '2021', value: 200.84 },
+                                      { year: '2022', value: 205.15 },
+                                      { year: '2023', value: 206.30 },
+                                      { year: '2024A', value: 211.40 },
+                                      { year: '2024B', value: 212.62 },
+                                      { year: '2025', value: 219.88 }
+                                    ]
+                                  }
+                                };
+                                
+                                // Define colors for charts
+                                let chartColors = {
+                                  blue: 'rgba(59, 130, 246, 0.7)',
+                                  green: 'rgba(16, 185, 129, 0.7)',
+                                  purple: 'rgba(139, 92, 246, 0.7)',
+                                  yellow: 'rgba(245, 158, 11, 0.7)',
+                                  red: 'rgba(239, 68, 68, 0.7)',
+                                  orange: 'rgba(249, 115, 22, 0.7)',
+                                  cyan: 'rgba(6, 182, 212, 0.7)',
+                                  indigo: 'rgba(99, 102, 241, 0.7)',
+                                  pink: 'rgba(236, 72, 153, 0.7)',
+                                  textColor: '#1F2937',
+                                  gridColor: 'rgba(156, 163, 175, 0.2)',
+                                  borderBlue: 'rgba(59, 130, 246, 1)',
+                                  borderGreen: 'rgba(16, 185, 129, 1)',
+                                  borderPurple: 'rgba(139, 92, 246, 1)',
+                                  borderYellow: 'rgba(245, 158, 11, 1)',
+                                  borderRed: 'rgba(239, 68, 68, 1)',
+                                  borderOrange: 'rgba(249, 115, 22, 1)',
+                                  borderCyan: 'rgba(6, 182, 212, 1)',
+                                  borderIndigo: 'rgba(99, 102, 241, 1)',
+                                  borderPink: 'rgba(236, 72, 153, 1)'
+                                };
+                                
+                                // Define dark mode colors
+                                const darkModeColors = {
+                                  blue: 'rgba(96, 165, 250, 0.7)',
+                                  green: 'rgba(52, 211, 153, 0.7)',
+                                  purple: 'rgba(167, 139, 250, 0.7)',
+                                  yellow: 'rgba(251, 191, 36, 0.7)',
+                                  red: 'rgba(248, 113, 113, 0.7)',
+                                  orange: 'rgba(251, 146, 60, 0.7)',
+                                  cyan: 'rgba(56, 189, 248, 0.7)',
+                                  indigo: 'rgba(129, 140, 248, 0.7)',
+                                  pink: 'rgba(244, 114, 182, 0.7)',
+                                  textColor: '#F9FAFB',
+                                  gridColor: 'rgba(107, 114, 128, 0.2)',
+                                  borderBlue: 'rgba(96, 165, 250, 1)',
+                                  borderGreen: 'rgba(52, 211, 153, 1)',
+                                  borderPurple: 'rgba(167, 139, 250, 1)',
+                                  borderYellow: 'rgba(251, 191, 36, 1)',
+                                  borderRed: 'rgba(248, 113, 113, 1)',
+                                  borderOrange: 'rgba(251, 146, 60, 1)',
+                                  borderCyan: 'rgba(56, 189, 248, 1)',
+                                  borderIndigo: 'rgba(129, 140, 248, 1)',
+                                  borderPink: 'rgba(244, 114, 182, 1)'
+                                };
+                                
+                                // Initialize charts when the DOM is loaded
+                                document.addEventListener('DOMContentLoaded', function() {
+                                  // Check if dark mode is enabled
+                                  if (document.documentElement.classList.contains('dark')) {
+                                    chartColors = darkModeColors;
+                                  }
+                                  
+                                  // Create market charts
+                                  createMarketChart('brain-market-chart', marketData.brain);
+                                  createMarketChart('cranial-market-chart', marketData.cranial);
+                                  createMarketChart('programming-market-chart', marketData.programming);
+                                  
+                                  // Create main trend chart
+                                  createTrendChart();
+                                  
+                                  // Create code-specific charts
+                                  createRevenueSplitChart('61885', {facility: 34256.64, office: 5946.34});
+                                  createRevenueSplitChart('61888', {facility: 23944.86, office: 0});
+                                  
+                                  // Create change charts
+                                  createChangeChart('61885', {
+                                    reimbursement: [0.31, 0.4, -0.14, -2.1, 1.66, -2.17],
+                                    payment: [6.23, 2.11, 2.88, -3.13, 0, 2.89],
+                                    combined: [6.07, 2.07, 2.81, -3.1, 0.04, 2.76]
+                                  });
+                                  
+                                  createChangeChart('61888', {
+                                    reimbursement: [-0.26, 0.44, -0.68, -2.57, 1.66, -2.51],
+                                    payment: [81.61, 2.2, 4.09, 8.59, 0, -3.92],
+                                    combined: [76.51, 2.14, 3.92, 8.22, 0.05, -3.88]
+                                  });
+                                });
+                                
+                                // Function to update chart colors for dark/light mode
+                                function updateChartColors() {
+                                  if (document.documentElement.classList.contains('dark')) {
+                                    chartColors = darkModeColors;
+                                  } else {
+                                    chartColors = {
+                                      blue: 'rgba(59, 130, 246, 0.7)',
+                                      green: 'rgba(16, 185, 129, 0.7)',
+                                      purple: 'rgba(139, 92, 246, 0.7)',
+                                      yellow: 'rgba(245, 158, 11, 0.7)',
+                                      red: 'rgba(239, 68, 68, 0.7)',
+                                      orange: 'rgba(249, 115, 22, 0.7)',
+                                      cyan: 'rgba(6, 182, 212, 0.7)',
+                                      indigo: 'rgba(99, 102, 241, 0.7)',
+                                      pink: 'rgba(236, 72, 153, 0.7)',
+                                      textColor: '#1F2937',
+                                      gridColor: 'rgba(156, 163, 175, 0.2)',
+                                      borderBlue: 'rgba(59, 130, 246, 1)',
+                                      borderGreen: 'rgba(16, 185, 129, 1)',
+                                      borderPurple: 'rgba(139, 92, 246, 1)',
+                                      borderYellow: 'rgba(245, 158, 11, 1)',
+                                      borderRed: 'rgba(239, 68, 68, 1)',
+                                      borderOrange: 'rgba(249, 115, 22, 1)',
+                                      borderCyan: 'rgba(6, 182, 212, 1)',
+                                      borderIndigo: 'rgba(99, 102, 241, 1)',
+                                      borderPink: 'rgba(236, 72, 153, 1)'
+                                    };
+                                  }
+                                  
+                                  // Recreate all charts with updated colors
+                                  createMarketChart('brain-market-chart', marketData.brain);
+                                  createMarketChart('cranial-market-chart', marketData.cranial);
+                                  createMarketChart('programming-market-chart', marketData.programming);
+                                  createTrendChart();
+                                  
+                                  // Recreate code-specific charts
+                                  const visibleDetails = document.querySelectorAll('.details-row.expanded');
+                                  visibleDetails.forEach(detail => {
+                                    const codeId = detail.id.replace('details-', '');
+                                    
+                                    if (document.getElementById(`revenueSplit-${codeId}`)) {
+                                      if (codeId === '61885') {
+                                        createRevenueSplitChart(codeId, {facility: 34256.64, office: 5946.34});
+                                      } else if (codeId === '61888') {
+                                        createRevenueSplitChart(codeId, {facility: 23944.86, office: 0});
+                                      }
+                                    }
+                                    
+                                    if (document.getElementById(`changeChart-${codeId}`)) {
+                                      if (codeId === '61885') {
+                                        createChangeChart(codeId, {
+                                          reimbursement: [0.31, 0.4, -0.14, -2.1, 1.66, -2.17],
+                                          payment: [6.23, 2.11, 2.88, -3.13, 0, 2.89],
+                                          combined: [6.07, 2.07, 2.81, -3.1, 0.04, 2.76]
+                                        });
+                                      } else if (codeId === '61888') {
+                                        createChangeChart(codeId, {
+                                          reimbursement: [-0.26, 0.44, -0.68, -2.57, 1.66, -2.51],
+                                          payment: [81.61, 2.2, 4.09, 8.59, 0, -3.92],
+                                          combined: [76.51, 2.14, 3.92, 8.22, 0.05, -3.88]
+                                        });
+                                      }
+                                    }
+                                  });
+                                }
+                                
+                                // Create market analysis chart
+                                function createMarketChart(canvasId, market) {
+                                  const canvas = document.getElementById(canvasId);
+                                  if (!canvas) return;
+                                  
+                                  // Destroy existing chart if it exists
+                                  const existingChart = Chart.getChart(canvas);
+                                  if (existingChart) {
+                                    existingChart.destroy();
+                                  }
+                                  
+                                  const ctx = canvas.getContext('2d');
+                                  
+                                  // Create chart with dual-axis showing historical trend and code breakdown
+                                  new Chart(ctx, {
+                                    type: 'bar',
+                                    data: {
+                                      labels: Object.keys(market.codeBreakdown),
+                                      datasets: [
+                                        {
+                                          label: 'Combined Value ($)',
+                                          data: Object.values(market.codeBreakdown).map(item => item.combined),
+                                          backgroundColor: canvasId.includes('brain') ? chartColors.blue : 
+                                                          canvasId.includes('cranial') ? chartColors.green : chartColors.purple,
+                                          borderColor: canvasId.includes('brain') ? chartColors.borderBlue : 
+                                                      canvasId.includes('cranial') ? chartColors.borderGreen : chartColors.borderPurple,
+                                          borderWidth: 1,
+                                          order: 1
+                                        },
+                                        {
+                                          label: 'Utilization (Services)',
+                                          data: Object.values(market.codeBreakdown).map(item => item.usage),
+                                          backgroundColor: chartColors.yellow,
+                                          borderColor: chartColors.borderYellow,
+                                          borderWidth: 1,
+                                          type: 'bar',
+                                          yAxisID: 'y1',
+                                          order: 2
+                                        },
+                                        {
+                                          label: 'YoY Change (%)',
+                                          data: Object.values(market.codeBreakdown).map(item => item.change),
+                                          backgroundColor: 'transparent',
+                                          borderColor: Object.values(market.codeBreakdown).map(item => 
+                                            item.change >= 0 ? chartColors.borderGreen : chartColors.borderRed
+                                          ),
+                                          borderWidth: 2,
+                                          type: 'line',
+                                          yAxisID: 'y2',
+                                          tension: 0.1,
+                                          pointBackgroundColor: Object.values(market.codeBreakdown).map(item => 
+                                            item.change >= 0 ? chartColors.green : chartColors.red
+                                          ),
+                                          pointRadius: 5,
+                                          pointHoverRadius: 7,
+                                          order: 0
+                                        }
+                                      ]
+                                    },
+                                    options: {
+                                      responsive: true,
+                                      maintainAspectRatio: false,
+                                      plugins: {
+                                        title: {
+                                          display: true,
+                                          text: `${market.name} - Code Analysis`,
+                                          color: chartColors.textColor,
+                                          font: {
+                                            size: 14,
+                                            weight: 'bold'
+                                          }
+                                        },
+                                        legend: {
+                                          position: 'top',
+                                          labels: {
+                                            color: chartColors.textColor,
+                                            usePointStyle: true,
+                                            boxWidth: 6,
+                                            padding: 15
+                                          }
+                                        },
+                                        tooltip: {
+                                          mode: 'index',
+                                          intersect: false,
+                                          callbacks: {
+                                            label: function(context) {
+                                              let label = context.dataset.label || '';
+                                              if (label) {
+                                                label += ': ';
+                                              }
+                                              if (context.dataset.yAxisID === 'y2') {
+                                                label += context.parsed.y.toFixed(2) + '%';
+                                              } else if (context.dataset.yAxisID === 'y1') {
+                                                label += context.parsed.y.toLocaleString();
+                                              } else {
+                                                label += '$' + context.parsed.y.toLocaleString(undefined, {
+                                                  minimumFractionDigits: 2,
+                                                  maximumFractionDigits: 2
+                                                });
+                                              }
+                                              return label;
+                                            }
+                                          }
+                                        }
+                                      },
+                                      scales: {
+                                        x: {
+                                          grid: {
+                                            color: chartColors.gridColor
+                                          },
+                                          ticks: {
+                                            color: chartColors.textColor
+                                          }
+                                        },
+                                        y: {
+                                          type: 'linear',
+                                          display: true,
+                                          position: 'left',
+                                          title: {
+                                            display: true,
+                                            text: 'Value ($)',
+                                            color: chartColors.textColor
+                                          },
+                                          grid: {
+                                            color: chartColors.gridColor
+                                          },
+                                          ticks: {
+                                            color: chartColors.textColor,
+                                            callback: function(value) {
+                                              return '$' + value.toLocaleString(undefined, {
+                                                minimumFractionDigits: 0,
+                                                maximumFractionDigits: 0
+                                              });
+                                            }
+                                          }
+                                        },
+                                        y1: {
+                                          type: 'linear',
+                                          display: true,
+                                          position: 'right',
+                                          title: {
+                                            display: true,
+                                            text: 'Services',
+                                            color: chartColors.textColor
+                                          },
+                                          grid: {
+                                            drawOnChartArea: false,
+                                            color: chartColors.gridColor
+                                          },
+                                          ticks: {
+                                            color: chartColors.textColor
+                                          }
+                                        },
+                                        y2: {
+                                          type: 'linear',
+                                          display: true,
+                                          position: 'right',
+                                          title: {
+                                            display: true,
+                                            text: 'Change (%)',
+                                            color: chartColors.textColor
+                                          },
+                                          grid: {
+                                            drawOnChartArea: false,
+                                            color: chartColors.gridColor
+                                          },
+                                          ticks: {
+                                            color: chartColors.textColor,
+                                            callback: function(value) {
+                                              return value + '%';
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  });
+                                }
+                                
+                                // Create main trend chart
+                                function createTrendChart() {
+                                  const trendCtx = document.getElementById('trendChart');
+                                  if (!trendCtx) return;
+                                  
+                                  // Destroy existing chart if it exists
+                                  const existingChart = Chart.getChart(trendCtx);
+                                  if (existingChart) {
+                                    existingChart.destroy();
+                                  }
+                                  
+                                  const datasets = [
+                                    {
+                                      label: 'Brain Neurostimulation (618)',
+                                      data: marketData.brain.historicalTrend.map(item => item.value),
+                                      borderColor: chartColors.borderBlue,
+                                      backgroundColor: chartColors.blue,
+                                      tension: 0.1,
+                                      pointRadius: 4
+                                    },
+                                    {
+                                      label: 'Cranial Nerve Stimulation (645)',
+                                      data: marketData.cranial.historicalTrend.map(item => item.value),
+                                      borderColor: chartColors.borderGreen,
+                                      backgroundColor: chartColors.green,
+                                      tension: 0.1,
+                                      pointRadius: 4
+                                    },
+                                    {
+                                      label: 'Neurostimulator Programming (959)',
+                                      data: marketData.programming.historicalTrend.map(item => item.value),
+                                      borderColor: chartColors.borderPurple,
+                                      backgroundColor: chartColors.purple,
+                                      tension: 0.1,
+                                      pointRadius: 4,
+                                      hidden: true // Hide by default as this is much smaller value
+                                    }
+                                  ];
+                                  
+                                  new Chart(trendCtx, {
+                                    type: 'line',
+                                    data: {
+                                      labels: marketData.brain.historicalTrend.map(item => item.year),
+                                      datasets: datasets
+                                    },
+                                    options: {
+                                      responsive: true,
+                                      maintainAspectRatio: false,
+                                      interaction: {
+                                        mode: 'index',
+                                        intersect: false
+                                      },
+                                      plugins: {
+                                        title: {
+                                          display: true,
+                                          text: 'Market Value Trends by Directory (2020-2025)',
+                                          color: chartColors.textColor,
+                                          font: {
+                                            size: 14,
+                                            weight: 'bold'
+                                          }
+                                        },
+                                        legend: {
+                                          position: 'top',
+                                          labels: {
+                                            color: chartColors.textColor,
+                                            usePointStyle: true,
+                                            boxWidth: 6,
+                                            padding: 15
+                                          }
+                                        },
+                                        tooltip: {
+                                          mode: 'index',
+                                          intersect: false,
+                                          callbacks: {
+                                            label: function(context) {
+                                              let label = context.dataset.label || '';
+                                              if (label) {
+                                                label += ': ';
+                                              }
+                                              label += '$' + context.parsed.y.toLocaleString(undefined, {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2
+                                              });
+                                              return label;
+                                            }
+                                          }
+                                        }
+                                      },
+                                      scales: {
+                                        x: {
+                                          grid: {
+                                            color: chartColors.gridColor
+                                          },
+                                          ticks: {
+                                            color: chartColors.textColor
+                                          }
+                                        },
+                                        y: {
+                                          grid: {
+                                            color: chartColors.gridColor
+                                          },
+                                          ticks: {
+                                            color: chartColors.textColor,
+                                            callback: function(value) {
+                                              return '$' + value.toLocaleString(undefined, {
+                                                minimumFractionDigits: 0,
+                                                maximumFractionDigits: 0
+                                              });
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  });
+                                }
+                                
+                                // Create revenue split charts for specific codes
+                                function createRevenueSplitChart(codeId, revenueSplit) {
+                                  const canvas = document.getElementById(`revenueSplit-${codeId}`);
+                                  if (!canvas) return;
+                                  
+                                  // Destroy existing chart if it exists
+                                  const existingChart = Chart.getChart(canvas);
+                                  if (existingChart) {
+                                    existingChart.destroy();
+                                  }
+                                  
+                                  const ctx = canvas.getContext('2d');
+                                  new Chart(ctx, {
+                                    type: 'pie',
+                                    data: {
+                                      labels: ['Facility', 'Office'],
+                                      datasets: [{
+                                        data: [revenueSplit.facility, revenueSplit.office],
+                                        backgroundColor: [chartColors.blue, chartColors.green],
+                                        borderColor: [chartColors.borderBlue, chartColors.borderGreen],
+                                        borderWidth: 1
+                                      }]
+                                    },
+                                    options: {
+                                      responsive: true,
+                                      maintainAspectRatio: false,
+                                      plugins: {
+                                        legend: {
+                                          position: 'top',
+                                          labels: {
+                                            color: chartColors.textColor,
+                                            padding: 15
+                                          }
+                                        },
+                                        title: {
+                                          display: true,
+                                          text: 'Revenue Split by Setting',
+                                          color: chartColors.textColor,
+                                          font: {
+                                            size: 14
+                                          }
+                                        },
+                                        tooltip: {
+                                          callbacks: {
+                                            label: function(context) {
+                                              let label = context.label || '';
+                                              if (label) {
+                                                label += ': ';
+                                              }
+                                              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                              const percentage = Math.round((context.raw / total) * 100);
+                                              label += '$' + context.raw.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + ' (' + percentage + '%)';
+                                              return label;
+                                            }
+                                          }
+                                        }
+                                      }
+                                    }
+                                  });
+                                }
+                                
+                                // Create year-over-year change charts for specific codes
+                                function createChangeChart(codeId, data) {
+                                  const canvas = document.getElementById(`changeChart-${codeId}`);
+                                  if (!canvas) return;
+                                  
+                                  // Destroy existing chart if it exists
+                                  const existingChart = Chart.getChart(canvas);
+                                  if (existingChart) {
+                                    existingChart.destroy();
+                                  }
+                                  
+                                  const ctx = canvas.getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['2020-2021', '2021-2022', '2022-2023', '2023-2024A', '2024A-2024B', '2024B-2025'],
+          datasets: [
+            {
+              label: 'Reimbursement Change (%)',
+              data: data.reimbursement,
+              backgroundColor: chartColors.blue,
+              borderColor: chartColors.borderBlue,
+              borderWidth: 1
+            },
+            {
+              label: 'Payment Change (%)',
+              data: data.payment,
+              backgroundColor: chartColors.green,
+              borderColor: chartColors.borderGreen,
+              borderWidth: 1
+            },
+            {
+              label: 'Combined Change (%)',
+              data: data.combined,
+              backgroundColor: chartColors.purple,
+              borderColor: chartColors.borderPurple,
+              borderWidth: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                color: chartColors.textColor,
+                usePointStyle: true,
+                boxWidth: 6,
+                padding: 15
+              }
+            },
+            title: {
+              display: true,
+              text: 'Year-over-Year Percent Changes',
+              color: chartColors.textColor,
+              font: {
+                size: 14
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  if (context.parsed.y !== null) {
+                    label += context.parsed.y.toFixed(2) + '%';
+                  }
+                  return label;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                color: chartColors.gridColor
+              },
+              ticks: {
+                color: chartColors.textColor
+              }
+            },
+            y: {
+              grid: {
+                color: chartColors.gridColor
+              },
+              ticks: {
+                color: chartColors.textColor,
+                callback: function(value) {
+                  return value + '%';
+                }
+              },
+              title: {
+                display: true,
+                text: 'Percent Change',
+                color: chartColors.textColor
+              }
+            }
+          }
+        }
+      });
+    }
+  </script>
+</body>
+</html>

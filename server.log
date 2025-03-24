@@ -1,0 +1,89 @@
+2025-03-24T19:23:08.590Z [info]: Server running on port 3000
+2025-03-24T19:23:22.684Z [info]: Starting FDA data fetch and save for all competitors
+2025-03-24T19:23:22.688Z [info]: Data directory ensured at C:\Users\sinis\Desktop\Medicare\data
+2025-03-24T19:23:22.690Z [info]: Fetching FDA data from registration for LivaNova: https://api.fda.gov/device/registrationlisting.json?search=registration.owner_operator.legal_name:%22LivaNova%22+AND+(k_number:K173068+OR+k_number:K161599+OR+k_number:K152601)&limit=100
+2025-03-24T19:23:22.769Z [info]: Fetching FDA data from registration for Medtronic: https://api.fda.gov/device/registrationlisting.json?search=registration.owner_operator.legal_name:%22Medtronic%22+AND+(product_code:LYC+OR+product_code:MHY)&limit=100
+2025-03-24T19:23:22.777Z [info]: Fetching FDA data from registration for NeuroPace: https://api.fda.gov/device/registrationlisting.json?search=registration.owner_operator.legal_name:%22NeuroPace%22+AND+product_code:MHY&limit=100
+2025-03-24T19:23:22.781Z [info]: Fetching FDA data from drugs for XCOPRI: https://api.fda.gov/drug/ndc.json?search=manufacturer_name:%22SK+Biopharmaceuticals%22+AND+brand_name:%22XCOPRI%22&limit=100
+2025-03-24T19:23:22.785Z [info]: Fetching FDA data from registration for Precisis AG: https://api.fda.gov/device/registrationlisting.json?search=registration.owner_operator.legal_name:%22Precisis%22&limit=100
+2025-03-24T19:23:22.790Z [info]: Fetching FDA data from registration for Epi-Minder: https://api.fda.gov/device/registrationlisting.json?search=registration.owner_operator.legal_name:%22Epi-Minder%22&limit=100
+2025-03-24T19:23:22.792Z [info]: Fetching FDA data from registration for Flow Medical: https://api.fda.gov/device/registrationlisting.json?search=registration.owner_operator.legal_name:%22Flow+Medical%22&limit=100
+2025-03-24T19:23:23.600Z [error]: FDA registration API error for LivaNova: Request failed with status code 404
+2025-03-24T19:23:23.601Z [info]: Fetching FDA data from k510 for LivaNova: https://api.fda.gov/device/510k.json?search=applicant:%22LivaNova%22+AND+product_code:LYC+AND+advisory_committee:%22neurology%22+AND+decision_summary:seizure&limit=100&sort=decision_date:desc
+2025-03-24T19:23:23.604Z [error]: FDA registration API error for Medtronic: Request failed with status code 404
+2025-03-24T19:23:23.605Z [info]: Fetching FDA data from k510 for Medtronic: https://api.fda.gov/device/510k.json?search=applicant:%22Medtronic%22+AND+(product_code:LYC+OR+product_code:MHY)+AND+advisory_committee:%22neurology%22+AND+decision_summary:seizure&limit=100&sort=decision_date:desc
+2025-03-24T19:23:23.606Z [error]: FDA drugs API error for XCOPRI: Request failed with status code 404
+2025-03-24T19:23:23.607Z [info]: Fetching FDA data from application for XCOPRI: https://api.fda.gov/drug/application.json?search=applicant:%22SK+Biopharmaceuticals%22+AND+product_name:%22Cenobamate%22&limit=100
+2025-03-24T19:23:23.611Z [error]: FDA registration API error for Flow Medical: Request failed with status code 404
+2025-03-24T19:23:23.611Z [info]: Fetching FDA data from k510 for Flow Medical: https://api.fda.gov/device/510k.json?search=applicant:%22Flow+Medical%22+AND+advisory_committee:%22neurology%22+AND+decision_summary:seizure&limit=100&sort=decision_date:desc
+2025-03-24T19:23:23.614Z [error]: FDA registration API error for Precisis AG: Request failed with status code 404
+2025-03-24T19:23:23.615Z [info]: Fetching FDA data from k510 for Precisis AG: https://api.fda.gov/device/510k.json?search=applicant:%22Precisis%22+AND+advisory_committee:%22neurology%22+AND+decision_summary:seizure&limit=100&sort=decision_date:desc
+2025-03-24T19:23:23.633Z [error]: FDA registration API error for NeuroPace: Request failed with status code 404
+2025-03-24T19:23:23.634Z [info]: Fetching FDA data from k510 for NeuroPace: https://api.fda.gov/device/510k.json?search=applicant:%22NeuroPace%22+AND+product_code:MHY+AND+advisory_committee:%22neurology%22+AND+decision_summary:seizure&limit=100&sort=decision_date:desc
+2025-03-24T19:23:23.668Z [error]: FDA registration API error for Epi-Minder: Request failed with status code 404
+2025-03-24T19:23:23.668Z [info]: Fetching FDA data from k510 for Epi-Minder: https://api.fda.gov/device/510k.json?search=applicant:%22Epi-Minder%22+AND+advisory_committee:%22neurology%22+AND+decision_summary:seizure&limit=100&sort=decision_date:desc
+2025-03-24T19:23:23.847Z [error]: FDA application API error for XCOPRI: Request failed with status code 404
+2025-03-24T19:23:23.847Z [info]: Fetching FDA data from adverse for XCOPRI: https://api.fda.gov/drug/event.json?search=manufacturer_name:%22SK+Biopharmaceuticals%22+AND+brand_name:%22XCOPRI%22&limit=100
+2025-03-24T19:23:23.858Z [error]: FDA k510 API error for LivaNova: Request failed with status code 404
+2025-03-24T19:23:23.859Z [info]: Fetching FDA data from enforcement for LivaNova: https://api.fda.gov/device/enforcement.json?search=product_code:LYC+AND+firm_name:%22LivaNova%22
+2025-03-24T19:23:23.865Z [error]: FDA k510 API error for Medtronic: Request failed with status code 404
+2025-03-24T19:23:23.866Z [info]: Fetching FDA data from enforcement for Medtronic: https://api.fda.gov/device/enforcement.json?search=product_code:(LYC+MHY)+AND+firm_name:%22Medtronic%22
+2025-03-24T19:23:23.870Z [error]: FDA k510 API error for Precisis AG: Request failed with status code 404
+2025-03-24T19:23:23.871Z [info]: Fetching FDA data from enforcement for Precisis AG: https://api.fda.gov/device/enforcement.json?search=firm_name:%22Precisis%22
+2025-03-24T19:23:23.873Z [error]: FDA k510 API error for Flow Medical: Request failed with status code 404
+2025-03-24T19:23:23.873Z [info]: Fetching FDA data from enforcement for Flow Medical: https://api.fda.gov/device/enforcement.json?search=firm_name:%22Flow+Medical%22
+2025-03-24T19:23:23.885Z [error]: FDA k510 API error for NeuroPace: Request failed with status code 404
+2025-03-24T19:23:23.885Z [info]: Fetching FDA data from enforcement for NeuroPace: https://api.fda.gov/device/enforcement.json?search=product_code:MHY+AND+firm_name:%22NeuroPace%22
+2025-03-24T19:23:23.925Z [error]: FDA k510 API error for Epi-Minder: Request failed with status code 404
+2025-03-24T19:23:23.926Z [info]: Fetching FDA data from enforcement for Epi-Minder: https://api.fda.gov/device/enforcement.json?search=firm_name:%22Epi-Minder%22
+2025-03-24T19:23:24.101Z [error]: FDA adverse API error for XCOPRI: Request failed with status code 404
+2025-03-24T19:23:24.107Z [info]: Saved data for XCOPRI to C:\Users\sinis\Desktop\Medicare\data\XCOPRI.json
+2025-03-24T19:23:24.116Z [error]: FDA enforcement API error for Medtronic: Request failed with status code 404
+2025-03-24T19:23:24.117Z [info]: Fetching FDA data from adverse for Medtronic: https://api.fda.gov/device/event.json?search=device.device_report_product_code:(LYC+MHY)+AND+manufacturer_d_name:%22Medtronic%22&limit=100
+2025-03-24T19:23:24.123Z [error]: FDA enforcement API error for Precisis AG: Request failed with status code 404
+2025-03-24T19:23:24.123Z [info]: Fetching FDA data from adverse for Precisis AG: https://api.fda.gov/device/event.json?search=manufacturer_d_name:%22Precisis%22&limit=100
+2025-03-24T19:23:24.127Z [error]: FDA enforcement API error for Flow Medical: Request failed with status code 404
+2025-03-24T19:23:24.127Z [info]: Fetching FDA data from adverse for Flow Medical: https://api.fda.gov/device/event.json?search=manufacturer_d_name:%22Flow+Medical%22&limit=100
+2025-03-24T19:23:24.140Z [error]: FDA enforcement API error for NeuroPace: Request failed with status code 404
+2025-03-24T19:23:24.141Z [info]: Fetching FDA data from adverse for NeuroPace: https://api.fda.gov/device/event.json?search=device.device_report_product_code:MHY+AND+manufacturer_d_name:%22NeuroPace%22&limit=100
+2025-03-24T19:23:24.173Z [error]: FDA enforcement API error for LivaNova: Request failed with status code 404
+2025-03-24T19:23:24.173Z [info]: Fetching FDA data from adverse for LivaNova: https://api.fda.gov/device/event.json?search=device.device_report_product_code:LYC+AND+manufacturer_d_name:%22LivaNova%22&limit=100
+2025-03-24T19:23:24.184Z [error]: FDA enforcement API error for Epi-Minder: Request failed with status code 404
+2025-03-24T19:23:24.185Z [info]: Fetching FDA data from adverse for Epi-Minder: https://api.fda.gov/device/event.json?search=manufacturer_d_name:%22Epi-Minder%22&limit=100
+2025-03-24T19:23:24.376Z [error]: FDA adverse API error for Precisis AG: Request failed with status code 404
+2025-03-24T19:23:24.376Z [info]: Fetching FDA data from udi for Precisis AG: https://api.fda.gov/device/udi.json?search=company_name:%22Precisis%22&limit=100
+2025-03-24T19:23:24.378Z [error]: FDA adverse API error for Flow Medical: Request failed with status code 404
+2025-03-24T19:23:24.378Z [info]: Fetching FDA data from udi for Flow Medical: https://api.fda.gov/device/udi.json?search=company_name:%22Flow+Medical%22&limit=100
+2025-03-24T19:23:24.424Z [error]: FDA adverse API error for LivaNova: Request failed with status code 404
+2025-03-24T19:23:24.424Z [info]: Fetching FDA data from udi for LivaNova: https://api.fda.gov/device/udi.json?search=product_code:LYC+AND+company_name:%22LivaNova%22&limit=100
+2025-03-24T19:23:24.429Z [error]: FDA adverse API error for Medtronic: Request failed with status code 404
+2025-03-24T19:23:24.430Z [info]: Fetching FDA data from udi for Medtronic: https://api.fda.gov/device/udi.json?search=product_code:(LYC+MHY)+AND+company_name:%22Medtronic%22&limit=100
+2025-03-24T19:23:24.444Z [error]: FDA adverse API error for Epi-Minder: Request failed with status code 404
+2025-03-24T19:23:24.444Z [info]: Fetching FDA data from udi for Epi-Minder: https://api.fda.gov/device/udi.json?search=company_name:%22Epi-Minder%22&limit=100
+2025-03-24T19:23:24.449Z [error]: FDA adverse API error for NeuroPace: Request failed with status code 404
+2025-03-24T19:23:24.449Z [info]: Fetching FDA data from udi for NeuroPace: https://api.fda.gov/device/udi.json?search=product_code:MHY+AND+company_name:%22NeuroPace%22&limit=100
+2025-03-24T19:23:24.631Z [error]: FDA udi API error for Precisis AG: Request failed with status code 404
+2025-03-24T19:23:24.631Z [info]: Fetching FDA data from pma for Precisis AG: https://api.fda.gov/device/pma.json?search=applicant:%22Precisis%22&limit=100
+2025-03-24T19:23:24.639Z [error]: FDA udi API error for Flow Medical: Request failed with status code 404
+2025-03-24T19:23:24.639Z [info]: Fetching FDA data from pma for Flow Medical: https://api.fda.gov/device/pma.json?search=applicant:%22Flow+Medical%22&limit=100
+2025-03-24T19:23:24.676Z [error]: FDA udi API error for Medtronic: Request failed with status code 404
+2025-03-24T19:23:24.677Z [info]: Fetching FDA data from pma for Medtronic: https://api.fda.gov/device/pma.json?search=product_code:(LYC+MHY)+AND+applicant:%22Medtronic%22&limit=100
+2025-03-24T19:23:24.704Z [error]: FDA udi API error for NeuroPace: Request failed with status code 404
+2025-03-24T19:23:24.705Z [info]: Fetching FDA data from pma for NeuroPace: https://api.fda.gov/device/pma.json?search=product_code:MHY+AND+applicant:%22NeuroPace%22&limit=100
+2025-03-24T19:23:24.726Z [error]: FDA udi API error for LivaNova: Request failed with status code 404
+2025-03-24T19:23:24.727Z [info]: Fetching FDA data from pma for LivaNova: https://api.fda.gov/device/pma.json?search=product_code:LYC+AND+applicant:%22LivaNova%22&limit=100
+2025-03-24T19:23:24.752Z [error]: FDA udi API error for Epi-Minder: Request failed with status code 404
+2025-03-24T19:23:24.753Z [info]: Fetching FDA data from pma for Epi-Minder: https://api.fda.gov/device/pma.json?search=applicant:%22Epi-Minder%22&limit=100
+2025-03-24T19:23:24.885Z [error]: FDA pma API error for Precisis AG: Request failed with status code 404
+2025-03-24T19:23:24.887Z [info]: Saved data for Precisis AG to C:\Users\sinis\Desktop\Medicare\data\Precisis_AG.json
+2025-03-24T19:23:24.940Z [error]: FDA pma API error for Medtronic: Request failed with status code 404
+2025-03-24T19:23:24.941Z [info]: Saved data for Medtronic to C:\Users\sinis\Desktop\Medicare\data\Medtronic.json
+2025-03-24T19:23:24.943Z [error]: FDA pma API error for Flow Medical: Request failed with status code 404
+2025-03-24T19:23:24.944Z [info]: Saved data for Flow Medical to C:\Users\sinis\Desktop\Medicare\data\Flow_Medical.json
+2025-03-24T19:23:24.960Z [error]: FDA pma API error for NeuroPace: Request failed with status code 404
+2025-03-24T19:23:24.963Z [info]: Saved data for NeuroPace to C:\Users\sinis\Desktop\Medicare\data\NeuroPace.json
+2025-03-24T19:23:24.980Z [error]: FDA pma API error for LivaNova: Request failed with status code 404
+2025-03-24T19:23:24.982Z [info]: Saved data for LivaNova to C:\Users\sinis\Desktop\Medicare\data\LivaNova.json
+2025-03-24T19:23:25.003Z [error]: FDA pma API error for Epi-Minder: Request failed with status code 404
+2025-03-24T19:23:25.006Z [info]: Saved data for Epi-Minder to C:\Users\sinis\Desktop\Medicare\data\Epi-Minder.json
+2025-03-24T19:23:25.007Z [info]: Completed FDA data fetch and save for all competitors in 2.32s

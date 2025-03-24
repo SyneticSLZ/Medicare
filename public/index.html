@@ -1,0 +1,286 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HCPCS Code Data Viewer</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .loader {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 2s linear infinite;
+      margin: 20px auto;
+      display: block;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+      position: sticky;
+      top: 0;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    .data-container {
+      margin-top: 20px;
+      overflow-x: auto;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+    .years-nav, .dir-nav {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .year-btn, .dir-btn {
+      padding: 8px 16px;
+      background-color: #e0e0e0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .year-btn.active, .dir-btn.active {
+      background-color: #3498db;
+      color: white;
+    }
+    .codes-filter {
+      margin: 20px 0;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .search-input {
+      padding: 8px;
+      flex-grow: 1;
+      max-width: 300px;
+    }
+    .controls-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>HCPCS Code Data Viewer</h1>
+  
+  <div class="controls-container">
+    <div class="dir-nav" id="dirNav"></div>
+    <div class="codes-filter">
+      <label for="codeSearch">Filter by HCPCS Code:</label>
+      <input type="text" id="codeSearch" class="search-input" placeholder="Enter code...">
+    </div>
+  </div>
+  
+  <div class="years-nav" id="yearsNav"></div>
+  
+  <div id="loading" class="loader"></div>
+  
+  <div class="data-container">
+    <table id="dataTable">
+      <thead>
+        <tr id="tableHeader"></tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Variables to store data
+      let allData = {};
+      let currentDirName = '618';
+      let currentYearIndex = 0;
+      const directories = ['618', '645', '959'];
+      const years = ['2020', '2021', '2022', '2023', '2024A', '2024B', '2025'];
+      
+      // Elements
+      const loadingEl = document.getElementById('loading');
+      const dirNavEl = document.getElementById('dirNav');
+      const yearsNavEl = document.getElementById('yearsNav');
+      const tableHeaderEl = document.getElementById('tableHeader');
+      const tableBodyEl = document.getElementById('tableBody');
+      const codeSearchEl = document.getElementById('codeSearch');
+      
+      // Fetch data from the server
+      async function fetchData() {
+        try {
+          loadingEl.style.display = 'block';
+          const response = await fetch('/api/hcpcs-data');
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          allData = await response.json();
+          loadingEl.style.display = 'none';
+          
+          // Create directory navigation
+          createDirectoryNavigation();
+          
+          // Create year navigation
+          createYearNavigation();
+          
+          // Display data for the first directory and year by default
+          displayYearData(currentDirName, currentYearIndex);
+        } catch (error) {
+          console.error('Error fetching data:', error);
+          loadingEl.style.display = 'none';
+          alert('Failed to load HCPCS data. Please check the console for details.');
+        }
+      }
+      
+      // Create buttons for directory navigation
+      function createDirectoryNavigation() {
+        directories.forEach((dir) => {
+          const btn = document.createElement('button');
+          btn.textContent = 'HCPCS ' + dir;
+          btn.className = 'dir-btn';
+          if (dir === currentDirName) btn.classList.add('active');
+          
+          btn.addEventListener('click', () => {
+            // Update active class
+            document.querySelectorAll('.dir-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Update current directory
+            currentDirName = dir;
+            
+            // Display data for selected directory and year
+            displayYearData(currentDirName, currentYearIndex);
+          });
+          
+          dirNavEl.appendChild(btn);
+        });
+      }
+      
+      // Create buttons for year navigation
+      function createYearNavigation() {
+        years.forEach((year, index) => {
+          const btn = document.createElement('button');
+          btn.textContent = year;
+          btn.className = 'year-btn';
+          if (index === 0) btn.classList.add('active');
+          
+          btn.addEventListener('click', () => {
+            // Update active class
+            document.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Update current year index
+            currentYearIndex = index;
+            
+            // Display data for selected directory and year
+            displayYearData(currentDirName, currentYearIndex);
+          });
+          
+          yearsNavEl.appendChild(btn);
+        });
+      }
+      
+      // Display data for a specific directory and year
+      function displayYearData(dirName, yearIndex) {
+        // Check if data exists for this directory
+        if (!allData[dirName] || !allData[dirName][yearIndex]) {
+          tableHeaderEl.innerHTML = '';
+          tableBodyEl.innerHTML = '<tr><td colspan="5">No data available for this selection</td></tr>';
+          return;
+        }
+        
+        const yearData = allData[dirName][yearIndex];
+        
+        // Clear previous data
+        tableHeaderEl.innerHTML = '';
+        tableBodyEl.innerHTML = '';
+        
+        if (yearData.length === 0) {
+          tableBodyEl.innerHTML = '<tr><td colspan="5">No data available for this selection</td></tr>';
+          return;
+        }
+        
+        // Create table header
+        const headers = Object.keys(yearData[0]);
+        headers.forEach(header => {
+          const th = document.createElement('th');
+          th.textContent = header;
+          tableHeaderEl.appendChild(th);
+        });
+        
+        // Apply current filter
+        filterAndDisplayData();
+      }
+      
+      // Filter and display data based on search input
+      function filterAndDisplayData() {
+        const searchTerm = codeSearchEl.value.trim().toUpperCase();
+        
+        // Check if data exists for current selection
+        if (!allData[currentDirName] || !allData[currentDirName][currentYearIndex]) {
+          tableBodyEl.innerHTML = '<tr><td colspan="5">No data available for this selection</td></tr>';
+          return;
+        }
+        
+        const yearData = allData[currentDirName][currentYearIndex];
+        
+        // Clear previous data
+        tableBodyEl.innerHTML = '';
+        
+        if (yearData.length === 0) {
+          tableBodyEl.innerHTML = '<tr><td colspan="5">No data available for this selection</td></tr>';
+          return;
+        }
+        
+        // Filter data
+        const filteredData = searchTerm ? 
+          yearData.filter(item => {
+            const code = item['HCPCS Code'] || '';
+            return code.toUpperCase().includes(searchTerm);
+          }) : 
+          yearData;
+        
+        // Create table rows
+        filteredData.forEach(item => {
+          const row = document.createElement('tr');
+          
+          Object.values(item).forEach(value => {
+            const td = document.createElement('td');
+            td.textContent = value;
+            row.appendChild(td);
+          });
+          
+          tableBodyEl.appendChild(row);
+        });
+        
+        if (filteredData.length === 0) {
+          tableBodyEl.innerHTML = '<tr><td colspan="5">No matching codes found</td></tr>';
+        }
+      }
+        
+    

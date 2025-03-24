@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HCPCS Code Analysis Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <style>
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #09f;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .data-table {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-6">
+        <h1 class="text-3xl font-bold text-center mb-8">HCPCS Code Analysis Dashboard</h1>
+        
+        <!-- File Upload Section -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Data Files</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">2023 Data</label>
+                    <input type="file" id="file2023" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">2024A Data</label>
+                    <input type="file" id="file2024A" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">2024B Data</label>
+                    <input type="file" id="file2024B" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">2025 Data</label>
+                    <input type="file" id="file2025" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+                </div>
+            </div>
+            <div class="mt-4">
+                <button id="loadData" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">
+                    Load Data
+                </button>
+                <button id="useSampleData" class="ml-4 bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded">
+                    Use Sample Data
+                </button>
+                <span id="dataStatus" class="ml-4 text-sm text-gray-600"></span>
+            </div>
+        </div>
+        
+        <!-- Filters Section -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Filters</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">HCPCS Code</label>
+                    <select id="codeFilter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white py-2 px-3 border">
+                        <option value="all">All Codes</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">MAC Locality</label>
+                    <select id="localityFilter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white py-2 px-3 border">
+                        <option value="all">All Localities</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Price Type</label>
+                    <select id="priceTypeFilter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white py-2 px-3 border">
+                        <option value="Non-Facility Price">Non-Facility Price</option>
+                        <option value="Facility Price">Facility Price</option>
+                        <option value="Non-Facility Limiting Charge">Non-Facility Limiting Charge</option>
+                        <option value="Facility Limiting Charge">Facility Limiting Charge</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Price Trend Chart -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold mb-4">Price Trend Over Time</h2>
+                <div id="trendChartContainer" class="h-64">
+                    <canvas id="trendChart"></canvas>
+                    <div id="trendLoading" class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Locality Comparison Chart -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold mb-4">Locality Price Comparison</h2>
+                <div id="localityChartContainer" class="h-64">
+                    <canvas id="localityChart"></canvas>
+                    <div id="localityLoading" class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Implementation & Patient Numbers Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Implementation Chart -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold mb-4">Implementation Numbers by Year</h2>
+                <div id="implementationChartContainer" class="h-64">
+                    <canvas id="implementationChart"></canvas>
+                    <div id="implementationLoading" class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Patient Numbers Chart -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold mb-4">Patient Numbers by Year</h2>
+                <div id="patientChartContainer" class="h-64">
+                    <canvas id="patientChart"></canvas>
+                    <div id="patientLoading" class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Summary Statistics Table -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">Summary Statistics</h2>
+            <div class="data-table">
+                <table id="statsTable" class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Year</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Non-Facility Price</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Avg. Facility Price</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Implementations</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Patient Count</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statsTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Main data storage
+        let allData = {
+            '2023': [],
+            '2024A': [],
+            '2024B': [],
+            '2025': []
+        };
+        
+        // Implementation and patient number data (simulated)
+        let implementationData = {};
+        let patientData = {};
+        
+        // Charts
+        let trendChart = null;
+        let localityChart = null;
+        let implementationChart = null;
+        let patientChart = null;
+        
+        // DOM Elements
+        const loadDataBtn = document.getElementById('loadData');
+        const useSampleDataBtn = document.getElementById('useSampleData');
+        const dataStatus = document.getElementById('dataStatus');
+        const codeFilter = document.getElementById('codeFilter');
+        const localityFilter = document.getElementById('localityFilter');
+        const priceTypeFilter = document.getElementById('priceTypeFilter');
+        
+        // Event Listeners
+        loadDataBtn.addEventListener('click', loadFiles);
+        useSampleDataBtn.addEventListener('click', loadSampleData);
+        codeFilter.addEventListener('change', updateCharts);
+        localityFilter.addEventListener('change', updateCharts);
+        priceTypeFilter.addEventListener('change', updateCharts);
+        
+        // Load files from user input
+        async function loadFiles() {
+            try {
+                dataStatus.textContent = "Loading files...";
+                
+                const fileInputs = {
+                    '2023': document.getElementById('file2023').files[0],
+                    '2024A': document.getElementById('file2024A').files[0],
+                    '2024B': document.getElementById('file2024B').files[0],
+                    '2025': document.getElementById('file2025').files[0]
+                };
+                
+                // Check if any files were uploaded
+                let hasFiles = false;
+                for (const year in fileInputs) {
+                    if (fileInputs[year]) hasFiles = true;
+                }
+                
+                if (!hasFiles) {
+                    dataStatus.textContent = "Please select at least one file";
+                    return;
+                }
+                
+                // Clear existing data
+                allData = {
+                    '2023': [],
+                    '2024A': [],
+                    '2024B': [],
+                    '2025': []
+                };
+                
+                // Process each file
+                for (const year in fileInputs) {
+                    if (fileInputs[year]) {
+                        const fileContent = await readFile(fileInputs[year]);
+                        const parsedData = parseCSV(fileContent);
+                        allData[year] = parsedData;
+                    }
+                }
+                
+                // Generate synthetic implementation and patient data
+                generateSyntheticData();
+                
+                // Initialize the dashboard
+                initializeDashboard();
+                
+                dataStatus.textContent = "Data loaded successfully";
+            } catch (error) {
+                console.error('Error loading files:', error);
+                dataStatus.textContent = "Error loading files";
+            }
+        }
+        
+        // Read a file and return its contents
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => resolve(event.target.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsText(file);
+            });
+        }
+        
+        // Parse CSV data
+        function parseCSV(csvContent) {
+            const results = Papa.parse(csvContent, {
+                header: true,
+                skipEmptyLines: true,
+                dynamicTyping: function(field) {
+                    // Custom type conversion for price fields
+                    const priceFields = [
+                        'Non-Facility Price', 
+                        'Facility Price', 
+                        'Non-Facility Limiting Charge', 
+                        'Facility Limiting Charge'
+                    ];
+                    
+                    if (priceFields.includes(field)) {
+                        return false; // Keep as string for now for custom processing
+                    }
+                    
+                    return true; // Dynamic typing for other fields
+                }
+            });
+            
+            // Process data - clean price fields
+            return results.data.map(row => {
+                const priceFields = [
+                    'Non-Facility Price', 
+                    'Facility Price', 
+                    'Non-Facility Limiting Charge', 
+                    'Facility Limiting Charge'
+                ];
+                
+                priceFields.forEach(field => {
+                    if (row[field] && typeof row[field] === 'string') {
+                        // Remove $ and convert to number
+                        row[field] = parseFloat(row[field].replace('$', '').replace(',', ''));
+                    }
+                });
+                
+                return row;
+            });
+        }
+        
+        // Load sample data for demo purposes
+        function loadSampleData() {
+            dataStatus.textContent = "Loading sample data...";
+            
+            // Sample data based on the provided paste.txt content
+            const sampleData = generateSampleData();
+            
+            // Set as the current data
+            allData = sampleData;
+            
+            // Generate synthetic implementation and patient data
+            generateSyntheticData();
+            
+            // Initialize the dashboard
+            initializeDashboard();
+            
+            dataStatus.textContent = "Sample data loaded successfully";
+        }
+        
+        // Generate sample data for demo purposes
+        function generateSampleData() {
+            // Sample data based on the provided paste.txt content
+            const baseData = [
+                {"HCPCS Code":"95970","Modifier":"  ","Short Description":"Alys npgt w/o prgrmg","Mac Locality":"0000000","Non-Facility Price":18.11,"Facility Price":17.79,"Non-Facility Limiting Charge":19.79,"Facility Limiting Charge":19.44},
+                {"HCPCS Code":"95970","Modifier":"  ","Short Description":"Alys npgt w/o prgrmg","Mac Locality":"0111205","Non-Facility Price":21.01,"Facility Price":20.55,"Non-Facility Limiting Charge":22.95,"Facility Limiting Charge":22.45},
+                {"HCPCS Code":"95970","Modifier":"  ","Short Description":"Alys npgt w/o prgrmg","Mac Locality":"0111209","Non-Facility Price":21.22,"Facility Price":20.75,"Non-Facility Limiting Charge":23.18,"Facility Limiting Charge":22.67},
+                {"HCPCS Code":"95976","Modifier":"  ","Short Description":"Alys smpl cn npgt prgrmg","Mac Locality":"0000000","Non-Facility Price":25.45,"Facility Price":24.95,"Non-Facility Limiting Charge":27.80,"Facility Limiting Charge":27.25},
+                {"HCPCS Code":"95976","Modifier":"  ","Short Description":"Alys smpl cn npgt prgrmg","Mac Locality":"0111205","Non-Facility Price":28.32,"Facility Price":27.75,"Non-Facility Limiting Charge":30.95,"Facility Limiting Charge":30.30},
+                {"HCPCS Code":"95977","Modifier":"  ","Short Description":"Alys cplx cn npgt prgrmg","Mac Locality":"0000000","Non-Facility Price":34.21,"Facility Price":33.65,"Non-Facility Limiting Charge":37.35,"Facility Limiting Charge":36.75},
+                {"HCPCS Code":"95977","Modifier":"  ","Short Description":"Alys cplx cn npgt prgrmg","Mac Locality":"0111205","Non-Facility Price":38.75,"Facility Price":37.95,"Non-Facility Limiting Charge":42.30,"Facility Limiting Charge":41.45}
+            ];
+            
+            // Create sample data for each year with slight variations
+            const sampleDataByYear = {
+                '2023': baseData,
+                '2024A': baseData.map(row => ({
+                    ...row,
+                    'Non-Facility Price': row['Non-Facility Price'] * 0.95,
+                    'Facility Price': row['Facility Price'] * 0.95,
+                    'Non-Facility Limiting Charge': row['Non-Facility Limiting Charge'] * 0.95,
+                    'Facility Limiting Charge': row['Facility Limiting Charge'] * 0.95
+                })),
+                '2024B': baseData.map(row => ({
+                    ...row,
+                    'Non-Facility Price': row['Non-Facility Price'] * 1.02,
+                    'Facility Price': row['Facility Price'] * 1.02,
+                    'Non-Facility Limiting Charge': row['Non-Facility Limiting Charge'] * 1.02,
+                    'Facility Limiting Charge': row['Facility Limiting Charge'] * 1.02
+                })),
+                '2025': baseData.map(row => ({
+                    ...row,
+                    'Non-Facility Price': row['Non-Facility Price'] * 1.05,
+                    'Facility Price': row['Facility Price'] * 1.05,
+                    'Non-Facility Limiting Charge': row['Non-Facility Limiting Charge'] * 1.05,
+                    'Facility Limiting Charge': row['Facility Limiting Charge'] * 1.05
+                }))
+            };
+            
+            return sampleDataByYear;
+        }
+        
+        // Generate synthetic implementation and patient data
+        function generateSyntheticData() {
+            // Get all unique HCPCS codes
+            const allCodes = new Set();
+            for (const year in allData) {
+                allData[year].forEach(row => {
+                    allCodes.add(row['HCPCS Code']);
+                });
+            }
+            
+            // Generate implementation data
+            implementationData = {};
+            patientData = {};
+            
+            allCodes.forEach(code => {
+                implementationData[code] = {
+                    '2023': Math.floor(Math.random() * 1000) + 500,
+                    '2024A': Math.floor(Math.random() * 1000) + 600,
+                    '2024B': Math.floor(Math.random() * 1000) + 700,
+                    '2025': Math.floor(Math.random() * 1000) + 800
+                };
+                
+                patientData[code] = {
+                    '2023': Math.floor(Math.random() * 10000) + 5000,
+                    '2024A': Math.floor(Math.random() * 10000) + 6000,
+                    '2024B': Math.floor(Math.random() * 10000) + 7000,
+                    '2025': Math.floor(Math.random() * 10000) + 8000
+                };
+            });
+        }
+        
+        // Initialize the dashboard
+        function initializeDashboard() {
+            // Populate filters
+            populateFilters();
+            
+            // Initialize charts
+            initializeCharts();
+            
+            // Update table
+            updateStatsTable();
+        }
+        
+        // Populate filter dropdowns
+        function populateFilters() {
+            // Clear existing options
+            codeFilter.innerHTML = '<option value="all">All Codes</option>';
+            localityFilter.innerHTML = '<option value="all">All Localities</option>';
+            
+            // Get unique codes and localities
+            const codes = new Set();
+            const localities = new Set();
+            
+            for (const year in allData) {
+                allData[year].forEach(row => {
+                    codes.add(row['HCPCS Code']);
+                    localities.add(row['Mac Locality']);
+                });
+            }
+            
+            // Add options to dropdowns
+            codes.forEach(code => {
+                const option = document.createElement('option');
+                option.value = code;
+                option.textContent = code;
+                codeFilter.appendChild(option);
+            });
+            
+            localities.forEach(locality => {
+                const option = document.createElement('option');
+                option.value = locality;
+                option.textContent = locality;
+                localityFilter.appendChild(option);
+            });
+        }
+        
+        // Initialize charts
+        function initializeCharts() {
+            // Destroy existing charts if they exist
+            if (trendChart) trendChart.destroy();
+            if (localityChart) localityChart.destroy();
+            if (implementationChart) implementationChart.destroy();
+            if (patientChart) patientChart.destroy();
+            
+            // Create new charts
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            const localityCtx = document.getElementById('localityChart').getContext('2d');
+            const implementationCtx = document.getElementById('implementationChart').getContext('2d');
+            const patientCtx = document.getElementById('patientChart').getContext('2d');
+            
+            // Hide loading indicators
+            document.getElementById('trendLoading').style.display = 'none';
+            document.getElementById('localityLoading').style.display = 'none';
+            document.getElementById('implementationLoading').style.display = 'none';
+            document.getElementById('patientLoading').style.display = 'none';
+            
+            // Initialize with empty data - will be updated by updateCharts()
+            trendChart = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            localityChart = new Chart(localityCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            implementationChart = new Chart(implementationCtx, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            patientChart = new Chart(patientCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Update charts with actual data
+            updateCharts();
+        }
+        
+        // Update charts based on filter selections
+        function updateCharts() {
+            const selectedCode = codeFilter.value;
+            const selectedLocality = localityFilter.value;
+            const selectedPriceType = priceTypeFilter.value;
+            
+            // Update trend chart
+            updateTrendChart(selectedCode, selectedLocality, selectedPriceType);
+            
+            // Update locality chart
+            updateLocalityChart(selectedCode, selectedPriceType);
+            
+            // Update implementation chart
+            updateImplementationChart(selectedCode);
+            
+            // Update patient chart
+            updatePatientChart(selectedCode);
+            
+            // Update stats table
+            updateStatsTable();
+        }
+        
+        // Update trend chart
+        function updateTrendChart(code, locality, priceType) {
+            // Prepare data for the chart
+            const years = ['2023', '2024A', '2024B', '2025'];
+            const datasets = [];
+            
+            if (code === 'all') {
+                // Get all unique codes
+                const codes = new Set();
+                for (const year in allData) {
+                    allData[year].forEach(row => {
+                        codes.add(row['HCPCS Code']);
+                    });
+                }
+                
+                // Create a dataset for each code
+                codes.forEach((codeValue, index) => {
+                    const data = [];
+                    const colors = [
+                        'rgb(75, 192, 192)',
+                        'rgb(255, 99, 132)',
+                        'rgb(54, 162, 235)',
+                        'rgb(255, 159, 64)',
+                        'rgb(153, 102, 255)'
+                    ];
+                    
+                    // Get data for each year
+                    years.forEach(year => {
+                        let sum = 0;
+                        let count = 0;
+                        
+                        if (allData[year]) {
+                            allData[year].forEach(row => {
+                                if (row['HCPCS Code'] === codeValue && 
+                                    (locality === 'all' || row['Mac Locality'] === locality) && 
+                                    row[priceType] !== undefined) {
+                                    sum += row[priceType];
+                                    count++;
+                                }
+                            });
+                        }
+                        
+                        data.push(count > 0 ? sum / count : null);
+                    });
+                    
+                    datasets.push({
+                        label: `Code ${codeValue}`,
+                        data: data,
+                        borderColor: colors[index % colors.length],
+                        backgroundColor: colors[index % colors.length].replace('rgb', 'rgba').replace(')', ', 0.2)'),
+                        tension: 0.1
+                    });
+                });
+            } else {
+                // Create a single dataset for the selected code
+                const data = [];
+                
+                // Get data for each year
+                years.forEach(year => {
+                    let sum = 0;
+                    let count = 0;
+                    
+                    if (allData[year]) {
+                        allData[year].forEach(row => {
+                            if (row['HCPCS Code'] === code && 
+                                (locality === 'all' || row['Mac Locality'] === locality) && 
+                                row[priceType] !== undefined) {
+                                sum += row[priceType];
+                                count++;
+                            }
+                        });
+                    }
+                    
+                    data.push(count > 0 ? sum / count : null);
+                });
+                
+                datasets.push({
+                    label: `Code ${code}`,
+                    data: data,
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1
+                });
+            }
+            
+            // Update the chart
+            trendChart.data.labels = years;
+            trendChart.data.datasets = datasets;
+            trendChart.options.plugins = {
+                title: {
+                    display: true,
+                    text: `${priceType} Trend Over Time`
+                }
+            };
+            trendChart.update();
+        }
+        
+        // Update locality chart
+        function updateLocalityChart(code, priceType) {
+            // Get the latest year with data
+            const years = ['2025', '2024B', '2024A', '2023'];
+            let latestYear = null;
+            
+            for (const year of years) {
+                if (allData[year] && allData[year].length > 0) {
+                    latestYear = year;
+                    break;
+                }
+            }
+            
+            if (!latestYear) return;
+            
+            // Get all unique localities
+            const localities = new Set();
+            allData[latestYear].forEach(row => {
+                localities.add(row['Mac Locality']);
+            });
+            
+            // Prepare data for the chart
+            const labels = Array.from(localities);
+            const datasets = [];
+            
+            if (code === 'all') {
+                // Get all unique codes
+                const codes = new Set();
+                allData[latestYear].forEach(row => {
+                    codes.add(row['HCPCS Code']);
+                });
+                
+                // Create a dataset for each code
+                codes.forEach((codeValue, index) => {
+                    const data = [];
+                    const colors = [
+                        'rgb(75, 192, 192)',
+                        'rgb(255, 99, 132)',
+                        'rgb(54, 162, 235)',
+                        'rgb(255, 159, 64)',
+                        'rgb(153, 102, 255)'
+                    ];
+                    
+                    // Get data for each locality
+                    labels.forEach(locality => {
+                        let value = null;
+                        
+                        allData[latestYear].forEach(row => {
+                            if (row['HCPCS Code'] === codeValue && 
+                                row['Mac Locality'] === locality && 
+                                row[priceType] !== undefined){
+                                value = row[priceType];
+                            }
+                        });
+                        
+                        data.push(value);
+                    });
+                    
+                    datasets.push({
+                        label: `Code ${codeValue}`,
+                        data: data,
+                        backgroundColor: colors[index % colors.length].replace('rgb', 'rgba').replace(')', ', 0.7)'),
+                    });
+                });
+            } else {
+                // Create a single dataset for the selected code
+                const data = [];
+                
+                // Get data for each locality
+                labels.forEach(locality => {
+                    let value = null;
+                    
+                    allData[latestYear].forEach(row => {
+                        if (row['HCPCS Code'] === code && 
+                            row['Mac Locality'] === locality && 
+                            row[priceType] !== undefined) {
+                            value = row[priceType];
+                        }
+                    });
+                    
+                    data.push(value);
+                });
+                
+                datasets.push({
+                    label: `Code ${code}`,
+                    data: data,
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                });
+            }
+            
+            // Update the chart
+            localityChart.data.labels = labels;
+            localityChart.data.datasets = datasets;
+            localityChart.options.plugins = {
+                title: {
+                    display: true,
+                    text: `${priceType} by Locality (${latestYear})`
+                }
+            };
+            localityChart.update();
+        }
+        
+        // Update implementation chart
+        function updateImplementationChart(code) {
+            const years = ['2023', '2024A', '2024B', '2025'];
+            const datasets = [];
+            
+            if (code === 'all') {
+                // Get all unique codes
+                const codes = new Set();
+                for (const codeKey in implementationData) {
+                    codes.add(codeKey);
+                }
+                
+                // Create a dataset for each code
+                codes.forEach((codeValue, index) => {
+                    const data = [];
+                    const colors = [
+                        'rgb(75, 192, 192)',
+                        'rgb(255, 99, 132)',
+                        'rgb(54, 162, 235)',
+                        'rgb(255, 159, 64)',
+                        'rgb(153, 102, 255)'
+                    ];
+                    
+                    // Get data for each year
+                    years.forEach(year => {
+                        if (implementationData[codeValue] && implementationData[codeValue][year] !== undefined) {
+                            data.push(implementationData[codeValue][year]);
+                        } else {
+                            data.push(null);
+                        }
+                    });
+                    
+                    datasets.push({
+                        label: `Code ${codeValue}`,
+                        data: data,
+                        backgroundColor: colors[index % colors.length].replace('rgb', 'rgba').replace(')', ', 0.7)'),
+                    });
+                });
+            } else {
+                // Create a single dataset for the selected code
+                const data = [];
+                
+                // Get data for each year
+                years.forEach(year => {
+                    if (implementationData[code] && implementationData[code][year] !== undefined) {
+                        data.push(implementationData[code][year]);
+                    } else {
+                        data.push(null);
+                    }
+                });
+                
+                datasets.push({
+                    label: `Code ${code}`,
+                    data: data,
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                });
+            }
+            
+            // Update the chart
+            implementationChart.data.labels = years;
+            implementationChart.data.datasets = datasets;
+            implementationChart.options.plugins = {
+                title: {
+                    display: true,
+                    text: 'Implementation Numbers by Year'
+                }
+            };
+            implementationChart.update();
+        }
+        
+        // Update patient chart
+        function updatePatientChart(code) {
+            const years = ['2023', '2024A', '2024B', '2025'];
+            const datasets = [];
+            
+            if (code === 'all') {
+                // Get all unique codes
+                const codes = new Set();
+                for (const codeKey in patientData) {
+                    codes.add(codeKey);
+                }
+                
+                // Create a dataset for each code
+                codes.forEach((codeValue, index) => {
+                    const data = [];
+                    const colors = [
+                        'rgb(75, 192, 192)',
+                        'rgb(255, 99, 132)',
+                        'rgb(54, 162, 235)',
+                        'rgb(255, 159, 64)',
+                        'rgb(153, 102, 255)'
+                    ];
+                    
+                    // Get data for each year
+                    years.forEach(year => {
+                        if (patientData[codeValue] && patientData[codeValue][year] !== undefined) {
+                            data.push(patientData[codeValue][year]);
+                        } else {
+                            data.push(null);
+                        }
+                    });
+                    
+                    datasets.push({
+                        label: `Code ${codeValue}`,
+                        data: data,
+                        borderColor: colors[index % colors.length],
+                        backgroundColor: colors[index % colors.length].replace('rgb', 'rgba').replace(')', ', 0.2)'),
+                        tension: 0.1
+                    });
+                });
+            } else {
+                // Create a single dataset for the selected code
+                const data = [];
+                
+                // Get data for each year
+                years.forEach(year => {
+                    if (patientData[code] && patientData[code][year] !== undefined) {
+                        data.push(patientData[code][year]);
+                    } else {
+                        data.push(null);
+                    }
+                });
+                
+                datasets.push({
+                    label: `Code ${code}`,
+                    data: data,
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1
+                });
+            }
+            
+            // Update the chart
+            patientChart.data.labels = years;
+            patientChart.data.datasets = datasets;
+            patientChart.options.plugins = {
+                title: {
+                    display: true,
+                    text: 'Patient Numbers by Year'
+                }
+            };
+            patientChart.update();
+        }
+        
+        // Update statistics table
+        function updateStatsTable() {
+            const tableBody = document.getElementById('statsTableBody');
+            tableBody.innerHTML = '';
+            
+            // Get selected code and locality
+            const selectedCode = codeFilter.value;
+            const selectedLocality = localityFilter.value;
+            
+            // Prepare data for the table
+            const tableData = [];
+            const years = ['2023', '2024A', '2024B', '2025'];
+            
+            // Get all codes to include
+            const codesToInclude = selectedCode === 'all' ? 
+                Array.from(new Set([].concat(...Object.values(allData).map(yearData => 
+                    yearData.map(row => row['HCPCS Code'])
+                )))) : 
+                [selectedCode];
+            
+            // For each code and year, calculate statistics
+            codesToInclude.forEach(code => {
+                years.forEach(year => {
+                    if (!allData[year] || allData[year].length === 0) return;
+                    
+                    // Filter data for this code/year/locality
+                    const filteredData = allData[year].filter(row => 
+                        row['HCPCS Code'] === code && 
+                        (selectedLocality === 'all' || row['Mac Locality'] === selectedLocality)
+                    );
+                    
+                    if (filteredData.length === 0) return;
+                    
+                    // Calculate average prices
+                    const nonFacilityPrices = filteredData
+                        .map(row => row['Non-Facility Price'])
+                        .filter(price => price !== undefined && !isNaN(price));
+                    
+                    const facilityPrices = filteredData
+                        .map(row => row['Facility Price'])
+                        .filter(price => price !== undefined && !isNaN(price));
+                    
+                    if (nonFacilityPrices.length === 0 && facilityPrices.length === 0) return;
+                    
+                    const avgNonFacilityPrice = nonFacilityPrices.length > 0 ? 
+                        nonFacilityPrices.reduce((sum, price) => sum + price, 0) / nonFacilityPrices.length : 
+                        null;
+                    
+                    const avgFacilityPrice = facilityPrices.length > 0 ? 
+                        facilityPrices.reduce((sum, price) => sum + price, 0) / facilityPrices.length : 
+                        null;
+                    
+                    // Get implementation and patient numbers
+                    const implementations = implementationData[code] && implementationData[code][year] !== undefined ? 
+                        implementationData[code][year] : 
+                        'N/A';
+                    
+                    const patients = patientData[code] && patientData[code][year] !== undefined ? 
+                        patientData[code][year] : 
+                        'N/A';
+                    
+                    // Add to table data
+                    tableData.push({
+                        code,
+                        description: filteredData[0]['Short Description'],
+                        year,
+                        avgNonFacilityPrice,
+                        avgFacilityPrice,
+                        implementations,
+                        patients
+                    });
+                });
+            });
+            
+            // Sort by code and year
+            tableData.sort((a, b) => {
+                if (a.code !== b.code) {
+                    return a.code.localeCompare(b.code);
+                }
+                
+                const yearOrder = { '2023': 0, '2024A': 1, '2024B': 2, '2025': 3 };
+                return yearOrder[a.year] - yearOrder[b.year];
+            });
+            
+            // Populate table
+            tableData.forEach(row => {
+                const tr = document.createElement('tr');
+                
+                tr.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${row.code}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${row.description}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${row.year}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${row.avgNonFacilityPrice !== null ? '$' + row.avgNonFacilityPrice.toFixed(2) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${row.avgFacilityPrice !== null ? '$' + row.avgFacilityPrice.toFixed(2) : 'N/A'}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${row.implementations}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">${row.patients}</td>
+                `;
+                
+                tableBody.appendChild(tr);
+            });
+        }
+        
+        // Initialize the app with sample data
+        document.addEventListener('DOMContentLoaded', function() {
+            // Automatically load sample data
+            loadSampleData();
+        });
+    </script>
+</body>
+</html>
