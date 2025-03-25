@@ -2,37 +2,37 @@
   "endpoints": {
     "registration": {
       "status": "error",
-      "error": "Request failed with status code 404",
+      "error": "No data found for Epi-Minder at registration",
       "statusCode": 404,
       "data": []
     },
     "k510": {
       "status": "error",
-      "error": "Request failed with status code 404",
+      "error": "No data found for Epi-Minder at k510",
       "statusCode": 404,
       "data": []
     },
     "enforcement": {
       "status": "error",
-      "error": "Request failed with status code 404",
+      "error": "No data found for Epi-Minder at enforcement",
       "statusCode": 404,
       "data": []
     },
     "adverse": {
       "status": "error",
-      "error": "Request failed with status code 404",
+      "error": "No data found for Epi-Minder at adverse",
       "statusCode": 404,
       "data": []
     },
     "udi": {
       "status": "error",
-      "error": "Request failed with status code 404",
+      "error": "No data found for Epi-Minder at udi",
       "statusCode": 404,
       "data": []
     },
     "pma": {
       "status": "error",
-      "error": "Request failed with status code 404",
+      "error": "No data found for Epi-Minder at pma",
       "statusCode": 404,
       "data": []
     }

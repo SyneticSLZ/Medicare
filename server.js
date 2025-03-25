@@ -231,7 +231,49 @@ app.get('/market-values', async (req, res) => {
   }
 });
 
+// API endpoint for specific HCPCS code
+app.get('/market-values/:hcpcsCode', async (req, res) => {
+  try {
+    const { hcpcsCode } = req.params;
+    
+    // Fetch data for the specific HCPCS code
+    const servicePromise = fetchServiceDataByHcpcs(hcpcsCode);
+    const geoPromise = fetchGeoDataByHcpcs(hcpcsCode);
+    
+    const [serviceResult, geoResult] = await Promise.all([
+      servicePromise,
+      geoPromise,
+    ]);
 
+    // Handle case where no data is returned
+    if (!serviceResult || serviceResult.length === 0) {
+      return res.status(404).json({
+        status: 'error',
+        message: `No service data found for HCPCS code: ${hcpcsCode}`
+      });
+    }
+
+    // Get unique NPIs from service data
+    const uniqueNpis = [...new Set(serviceResult.map(item => item.Rndrng_NPI))];
+    const providerData = await fetchProviderDataByNpi(uniqueNpis);
+
+    // Analyze market values for this specific code
+    const marketAnalysis = analyzeMarketValues(serviceResult, providerData, geoResult);
+
+    res.json({
+      status: 'success',
+      data: marketAnalysis,
+      hcpcsCode: hcpcsCode,
+      year: 2022,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      message: error.message || `Error processing HCPCS code: ${req.params.hcpcsCode}`
+    });
+  }
+});
 
 // API endpoint to get processed HCPCS data
 app.get('/api/hcpcs-data', async (req, res) => {
