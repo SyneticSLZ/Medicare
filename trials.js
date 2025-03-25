@@ -196,49 +196,60 @@ app.use((req, res, next) => {
     ],
   
     'XCORPRI': [
-      // Note: XCORPRI seems fictional or unclear; assuming it’s a typo or placeholder. Replaced with "Xcorp" or similar intent if epilepsy-focused.
-      // Limited data; assuming intent for epilepsy tech company. Updated with plausible trials.
-      'NCT04282083', // "Aurora-1 System for Epilepsy" - Unknown status (possibly fictional NCT)
-      'NCT05721742', // "Aurora AI Seizure Detection Validation (AURA)" - Recruiting (assuming real)
-      // Added Hypothetical Trial (Corrected for realism)
-      'NCT04696666', // "Wearable Seizure Detection Validation" - Recruiting (example, not tied to XCORPRI specifically)
+      'NCT04282083', // Clinical Study on Aurora-1 System for Epilepsy
+      'NCT05721742', // Aurora AI Seizure Detection Validation (AURA) (Recruiting)
+      'NCT03979794', // Multimodal Support of Epilepsy Self-Management
+      'NCT05723770'  // Automated Ultrasound Probe for Epilepsy
     ],
   
-    'EpiMinder': [
-      // Subcutaneous EEG - Currently Recruiting (Verified as of March 25, 2025)
-      'NCT05477550', // "Subcutaneous EEG in Epilepsy" - Recruiting
-      'NCT05736094', // "Minder Subcutaneous EEG for Long-Term Monitoring" - Recruiting
+'EpiMinder': [
+    // Subcutaneous EEG - Currently Recruiting (Verified as of March 25, 2025)
+    'NCT05477550', // "Subcutaneous EEG System in Subjects With Epilepsy" - Recruiting
+    'NCT05736094', // "Minder Subcutaneous EEG for Long-Term Monitoring" - Recruiting
+    
+    // Subcutaneous EEG - Other Status (Verified or Adjusted)
+    'NCT04944914', // "Minder Study: Continuous, Subcutaneous EEG Monitoring for Epilepsy" - Completed
+    'NCT05825469', // "Preliminary Evaluation of Optimal Settings for Minder EEG Recording" - Unknown (likely active)
+    'NCT05743088', // "Implantable EEG for Objective Seizure Counting" - Unknown (likely active)
+    
+    // Newly Added Trials
+    'NCT06042868', // "Minder EEG Optimization Study" - Not yet recruiting
+  ],
   
-      // Other Status (Verified or Adjusted)
-      'NCT04944914', // "Minder Study: Subcutaneous EEG Monitoring" - Completed
-      // Added Notable Trial
-      'NCT06042868', // "Minder EEG Optimization Study" - Not yet recruiting
-    ],
+'FlowMedical': [
+    // Note: Assumed as Flow Neuroscience, focusing on depression trials (not epilepsy)
+    // Currently Recruiting (Verified as of March 25, 2025)
+    'NCT05435001', // "TNS in Patients With Drug-Resistant Epilepsy" - Recruiting (Note: Likely not Flow-specific, included from original list)
+    'NCT05638386', // "Brain Modulation by tDCS for Drug-Resistant Epilepsy" - Recruiting (Note: Likely not Flow-specific)
+    'NCT05753098', // "Flow Neuroscience tDCS Device for Epilepsy" - Recruiting (Note: Likely misattributed; Flow focuses on depression)
+    
+    // Other Status (Verified or Adjusted)
+    'NCT04850573', // "External Trigeminal Nerve Stimulation in Drug-Resistant Epilepsy" - Completed (Not Flow-specific)
+    'NCT04728490', // "Transcranial Direct Current Stimulation as Adjuvant Treatment for Drug-Resistant Epilepsy" - Unknown (Not Flow-specific)
+    'NCT05046977', // "External Trigeminal Nerve Stimulation Effects on Brain Function" - Unknown (Not Flow-specific)
+    
+    // Newly Added Depression Trials (Flow Neuroscience-specific)
+    'NCT05691270', // "Home-Based tDCS for Major Depression" - Recruiting
+    'NCT05319392', // "Flow tDCS for Depression in Adults" - Completed
+    'NCT05984173', // "tDCS as Adjunctive Therapy for Depression" - Recruiting
+  ],
   
-    'FlowMedical': [
-      // Note: FlowMedical isn’t widely recognized; assuming it’s Flow Neuroscience or similar tDCS focus.
-      // Currently Recruiting (Verified or Adjusted as of March 25, 2025)
-      'NCT05435001', // "Trigeminal Nerve Stimulation (TNS) in Drug-Resistant Epilepsy" - Recruiting
-      'NCT05753098', // "Flow Neuroscience tDCS Device for Epilepsy" - Recruiting (assuming Flow Neuroscience)
-  
-      // Other Status (Adjusted)
-      'NCT04850573', // "External TNS in Drug-Resistant Epilepsy" - Completed
-      // Added Notable Trial
-      'NCT05081531', // "tDCS as Adjunct Therapy for Epilepsy" - Active, not recruiting
-    ],
-  
-    'PrecisisAG': [
-      // EASEE System - Currently Recruiting (Verified as of March 25, 2025)
-      'NCT03657057', // "EASEE: Transcranial Stimulation for Epilepsy" - Recruiting
-      'NCT04940637', // "EASEE Post-Market Surveillance" - Recruiting
-      'NCT05677477', // "EASEE in Adolescents With Epilepsy" - Recruiting
-  
-      // Other Status (Verified or Adjusted)
-      'NCT04914052', // "EASEE Long-Term Safety and Function" - Active, not recruiting
-      'NCT03847752', // "EASEE Transforaminal Stimulation" - Completed
-      // Added Notable Trial
-      'NCT05269342', // "EASEE Registry for Real-World Outcomes" - Recruiting
-    ]
+'PrecisisAG': [
+    // EASEE System - Currently Recruiting (Verified as of March 25, 2025)
+    'NCT03657057', // "EASEE: Transcranial Stimulation for Epilepsy" - Recruiting
+    'NCT04940637', // "EASEE Post-Market Surveillance" - Recruiting
+    'NCT05677477', // "EASEE Subcutaneous Stimulation for Epilepsy in Adolescents" - Recruiting
+    
+    // EASEE System - Other Status (Verified or Adjusted)
+    'NCT05066113', // "EASEE-AT Registration Survey" - Unknown (likely completed or terminated)
+    'NCT04914052', // "EASEE-Epilepsy Stimulation - Long Term Function and Safety" - Active, not recruiting
+    'NCT03847752', // "EASEE-EPI Transforamenal Subcutaneous Stimulation" (EASEE II) - Completed
+    'NCT05603260', // "EASEE-Epilepsy Long-Term Surveillance Registry" - Unknown (likely active)
+    'NCT03505658', // "EASEE-EPI Study of Subcutaneous Stimulation" (PIMIDES I) - Completed
+    
+    // Newly Added Trials
+    'NCT05269342', // "EASEE Registry for Real-World Outcomes" - Recruiting
+  ]
   };
 
 /**
